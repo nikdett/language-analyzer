@@ -14,11 +14,60 @@
     <div id = "results"></div>
 
     <script>
-    // get text from user to be analyzed
+      // detect words and add to score 
+      function detectWords(cleanWords, wordList)
+      {
+        let score = 0 
+        for (const word of cleanWords)
+        {
+          if (wordList.includes(word))
+          {
+            score++
+          }
+        }
+        return score
+      }
+    
     function analyze()
     {
-      const text = document.getElementById("inputText").value 
-      alert(text)
+      // get and clean text
+      const text = document.getElementById("inputText").value
+
+      // split sentances into individual words
+      const words = text.split(" ") 
+
+      // make input all lowercase and deobfuscate
+      const cleanWords = words.map(w => w.toLowerCase()
+        .replace(/0/g, "o")
+        .replace(/1/g, "i")
+        .replace(/3/g, "e")
+        .replace(/4/g, "a")
+        .replace(/[^a-z]/g, ""))
+
+      // word lists 
+      const usVSthemWords = ["they", "them", "all", "us"]
+      const threatWords = ["bomb", "threat", "enemy", "traitor", "destroy", "animal", "rodent", "corrupt", "hate", "revenge", "invasion", "attack"]
+      const absolutistWords = ["always", "never", "everyone", "nobody", "all", "none", "completely", "must"]
+      const angryWords = ["hate", "despise", "vile", "outrage", "furious", "disguisting"]
+      const negativeWords = ["terrible", "awful", "horrible", "dreadful", "disaster", "catastrophe", "crisis"]
+      const emotionalWords = ["urgent", "critical", "alarming", "shocking", "unprecedented", "explosive"]
+
+      // get scores
+      const usVSthemScore = detectWords(cleanWords, usVSthemWords)
+      const threatScore = detectWords(cleanWords, threatWords)
+      const absolutistScore = detectWords(cleanWords, absolutistWords)
+      const angryScore = detectWords(cleanWords, angryWords)
+      const negativeScore = detectWords(cleanWords, negativeWords)
+      const emotionalScore = detectWords(cleanWords, emotionalWords)
+
+      // display results
+      document.getElementById("results").innerHTML =
+        "Us vs. them score: " + "<br>" +
+        "Threat score: " + threatScore + "<br>" + 
+        "Absolutist score: " + absolutistScore + "<br>" + 
+        "Anger score: " + angryScore + "<br>" + 
+        "Negativity score: " + negativeScore + "<br>" +
+        "Emotional charge score: " + emotionalScore 
     }
   </script>
   </body>
