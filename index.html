@@ -4,10 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Language Analyzer</title>
+  <style>
+    body 
+    {
+      background-color: #faf6f3;
+    }
+    #results
+    {
+      width: 200px;
+    }
+    textarea
+    {
+      background-color: #fffcfb;
+      border: 1px solid #d9d0cc;
+      border-radius: 10px;
+      padding: 10px;
+    }
+  </style>
   </head>
   <body>
     <h1>Language Analyzer</h1>
-    <p>Paste your text here to analyze it for signs of escalating rhetoric</p>
+    <p>Paste your text here to analyze it for signs of escalating rhetoric: </p>
     <textarea id = "inputText" rows="10" cols="60"></textarea> 
     <br>
     <button onclick = "analyze()">Analyze</button>
@@ -43,6 +60,7 @@
         .replace(/3/g, "e")
         .replace(/4/g, "a")
         .replace(/[^a-z]/g, ""))
+      const totalWords = words.length
 
       // word lists 
       const usVSthemWords = ["they", "those", "we", "them", "all", "us"]
@@ -57,17 +75,55 @@
       const threatScore = detectWords(cleanWords, threatWords)
       const absolutistScore = detectWords(cleanWords, absolutistWords)
       const angryScore = detectWords(cleanWords, angryWords)
-      const negativeScore = detectWords(cleanWords, negativeWords)
+      const negativityScore = detectWords(cleanWords, negativeWords)
       const emotionalScore = detectWords(cleanWords, emotionalWords)
 
+      // threat percentage 
+      const threatPercent = Math.min((threatScore / totalWords) * 100, 100)
+      const usVsThemPercent = Math.min((usVSthemScore / totalWords) * 100, 100)
+      const absolutistPercent = Math.min((absolutistScore / totalWords) * 100, 100)
+      const angryPercent = Math.min((angryScore / totalWords) * 100, 100)
+      const negativityPercent = Math.min((negativityScore / totalWords) * 100, 100)
+      const emotionalPercent = Math.min((emotionalScore / totalWords) * 100, 100)
+      const totalPercent = Math.min((threatPercent + usVsThemPercent + absolutistPercent + angryPercent + negativityPercent + emotionalPercent) / 6, 100)
+
       // display results
-      document.getElementById("results").innerHTML =
-        "Us vs. them score: " + usVSthemScore + "<br>" +
-        "Threat score: " + threatScore + "<br>" + 
-        "Absolutist score: " + absolutistScore + "<br>" + 
-        "Anger score: " + angryScore + "<br>" + 
-        "Negativity score: " + negativeScore + "<br>" +
-        "Emotional charge score: " + emotionalScore 
+      document.getElementById("results").innerHTML = `
+        <p><strong>Overall Threat Level: ${totalPercent.toFixed(1)}%</strong>
+          <div style = "width:100%; background:#f0ebe8; border:1px solid #d9d0cc; border-radius:10px;">
+            <div style = "background:#6b6057; width:${totalPercent}%; height:12px; border-radius:10px;"></div>
+          </div></p>
+        <div style="margin-top:20px;"></div>  
+        <div style = "margin-bottom:12px;">
+          <span style = "margin-bottom: 4px; display: block;">Threat</span>
+          <div style = "width:100%; background:#f0ebe8; border:1px solid #d9d0cc; border-radius:10px;">
+            <div style = "background:maroon; width:${threatPercent}%; height:7px; border-radius:10px;"></div>
+            </div></div>
+        <div style = "margin-bottom:12px;">
+          <span style = "margin-bottom: 4px; display: block;">Us vs Them</span> 
+          <div style = "width:100%; background:#f0ebe8; border:1px solid #d9d0cc; border-radius:10px;">
+            <div style = "background:firebrick; width:${usVsThemPercent}%; height:7px; border-radius:10px;"></div>
+          </div></div>
+        <div style = "margin-bottom:12px;">
+          <span style = "margin-bottom: 4px; display: block;">Absolutist</span>
+          <div style = "width:100%; background:#f0ebe8; border:1px solid #d9d0cc; border-radius:10px;">
+            <div style = "background:indianred; width:${absolutistPercent}%; height:7px; border-radius:10px;"></div>
+          </div></div>
+        <div style = "margin-bottom:12px;">
+          <span style = "margin-bottom: 4px; display: block;">Anger</span>
+          <div style = "width:100%; background:#f0ebe8; border:1px solid #d9d0cc; border-radius:10px;">
+            <div style = "background:palevioletred; width:${angryPercent}%; height:7px; border-radius:10px;"></div>
+          </div></div>
+        <div style = "margin-bottom:12px;">
+          <span style = "margin-bottom: 4px; display: block;">Negativity</span>
+          <div style = "width:100%; background:#f0ebe8; border:1px solid #d9d0cc; border-radius:10px;">
+            <div style = "background:#7B5EA7; width:${negativityPercent}%; height:7px; border-radius:10px;"></div>
+          </div></div>
+        <div style = "margin-bottom:12px;">
+          <span style = "margin-bottom: 4px; display: block;">Emotional Charge</span>
+          <div style = "width:100%; background:#f0ebe8; border:1px solid #d9d0cc; border-radius:10px;">
+            <div style = "background:#2B3A67; width:${emotionalPercent}%; height:7px; border-radius:10px;"></div>
+          </div></p> `
     }
   </script>
   </body>
