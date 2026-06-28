@@ -45,7 +45,7 @@
         .replace(/[^a-z]/g, ""))
 
       // word lists 
-      const usVSthemWords = ["they", "them", "all", "us"]
+      const usVSthemWords = ["they", "those", "we", "them", "all", "us"]
       const threatWords = ["bomb", "threat", "enemy", "traitor", "destroy", "animal", "rodent", "corrupt", "hate", "revenge", "invasion", "attack"]
       const absolutistWords = ["always", "never", "everyone", "nobody", "all", "none", "completely", "must"]
       const angryWords = ["hate", "despise", "vile", "outrage", "furious", "disguisting"]
@@ -62,7 +62,7 @@
 
       // display results
       document.getElementById("results").innerHTML =
-        "Us vs. them score: " + "<br>" +
+        "Us vs. them score: " + usVSthemScore + "<br>" +
         "Threat score: " + threatScore + "<br>" + 
         "Absolutist score: " + absolutistScore + "<br>" + 
         "Anger score: " + angryScore + "<br>" + 
