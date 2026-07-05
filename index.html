@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Language Analyzer</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body 
     {
@@ -20,17 +21,59 @@
       border-radius: 10px;
       padding: 10px;
     }
+
+    .textEntry {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 15px;
+   }
+
+   .yearInput {
+    width: 150px;
+    flex-shrink: 0;
+  }
+
+    .inputText {
+    flex: 1;
+    background-color: #fffcfb;
+    border: 1px solid #d9d0cc;
+    border-radius: 10px;
+    padding: 10px;
+  }
+  .textAndResults {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .entryResults {
+    margin-top: 10px;
+    font-size: 14px;
+ } 
   </style>
   </head>
   <body>
     <h1>Language Analyzer</h1>
     <p>Paste your text here to analyze it for signs of escalating rhetoric: </p>
-    <textarea id = "inputText" rows="10" cols="60"></textarea> 
-    <br>
-    <button onclick = "analyze()">Analyze</button>
+    <div id = "textBoxes">
+      <div class="textEntry">
+      <input type="number" class="yearInput" placeholder="Year (e.g. 1939)" min="1900" style="padding: 10px; border: 1px solid #d9d0cc; border-radius: 10px; background-color: #fffcfb;">
+      <div class="textAndResults">
+        <textarea class="inputText" rows="5"></textarea>
+        <div class="entryResults"></div>
+</div>
+</div>
+    </div>
+    <button onclick = "addTextBox()">+ Add Text Box</button>
+    <button onclick = "analyze()">Analyze all</button>  
     <div id = "results"></div>
+    <button onclick = "toggleChart()">Hide Chart</button></button>
+    <canvas id="myChart" width = "600" height = "300" style = "margin-top: 30px;"></canvas>
 
     <script>
+      const results = []
+
       // detect words and add to score 
       function detectWords(cleanWords, wordList)
       {
@@ -47,19 +90,26 @@
     
     function analyze()
     {
-      // get and clean text
-      const text = document.getElementById("inputText").value
+      results.length = 0
+      // get and clean text and date
+      const entries = document.querySelectorAll(".textEntry")
 
-      // split sentances into individual words
-      const words = text.split(" ") 
+      entries.forEach(entry => {
+        const text = entry.querySelector(".inputText").value
+        const year = entry.querySelector(".yearInput").value || "Unknown"
 
-      // make input all lowercase and deobfuscate
-      const cleanWords = words.map(w => w.toLowerCase()
-        .replace(/0/g, "o")
-        .replace(/1/g, "i")
-        .replace(/3/g, "e")
-        .replace(/4/g, "a")
-        .replace(/[^a-z]/g, ""))
+        if (text.trim() === " ") return
+      
+        // split sentances into individual words
+        const words = text.split(" ") 
+
+        // make input all lowercase and deobfuscate
+        const cleanWords = words.map(w => w.toLowerCase()
+          .replace(/0/g, "o")
+          .replace(/1/g, "i")
+          .replace(/3/g, "e")
+          .replace(/4/g, "a")
+          .replace(/[^a-z]/g, ""))
 
       // word lists 
       const usVSthemWords = ['barbarian', 'collaborator', 'degenerate', 'demographic', 'enemy', 'foreigner', 'globalist', 'heretic', 'immigrant', 'impure', 'infidel', 'infiltrator', 'ingroup', 'invader', 'native', 'oppressor', 'outcast', 'outsider', 'parasite', 'puppet', 'radical', 'regime', 'replacement', 'separatist', 'subversive', 'traitor', 'tribal', 'tribe', 'undesirable', 'vermin', 'xenophobia', "outsiders", "foreigners", "elites", "globalists", "establishment", "regime", "enemies", "invaders", "infiltrators", "traitors", "patriots", "replace", "destroy", "purge", "cleanse", "reclaim", "takeover", "occupation", "oppressors", "liberators", "collaborators", "puppets", "sheeple", "brainwashed", "awakened", "redpilled", "sheep", "cattle", "vermin", "parasites", "infestation", "invasion", "demographic", "replacement", "native", "pure", "impure", "corrupt", "treasonous"]
@@ -78,16 +128,27 @@
       const emotionalScore = detectWords(cleanWords, emotionalWords)
 
       // threat percentage
-      const threatPercent = Math.min((threatScore / threatWords.length) * 100 * 3, 100)
-      const usVsThemPercent = Math.min((usVSthemScore / usVSthemWords.length) * 100 * 3, 100)
-      const absolutistPercent = Math.min((absolutistScore / absolutistWords.length) * 100 * 3, 100)
-      const angryPercent = Math.min((angryScore / angryWords.length) * 100 * 3, 100)
-      const negativityPercent = Math.min((negativityScore / negativeWords.length) * 100 * 3, 100)
-      const emotionalPercent = Math.min((emotionalScore / emotionalWords.length) * 100 * 3, 100)
+      const threatPercent = Math.min((threatScore / threatWords.length) * 100 * 20, 100)
+      const usVsThemPercent = Math.min((usVSthemScore / usVSthemWords.length) * 100 * 20, 100)
+      const absolutistPercent = Math.min((absolutistScore / absolutistWords.length) * 100 * 20, 100)
+      const angryPercent = Math.min((angryScore / angryWords.length) * 100 * 8, 100)
+      const negativityPercent = Math.min((negativityScore / negativeWords.length) * 100 * 20, 100)
+      const emotionalPercent = Math.min((emotionalScore / emotionalWords.length) * 100 * 20, 100)
       const totalPercent = Math.min((threatPercent + usVsThemPercent + absolutistPercent + angryPercent + negativityPercent + emotionalPercent) / 6, 100)
 
+      results.push({
+        year: year,
+        total: totalPercent,
+        usVSthem: usVsThemPercent,
+        absolutist: absolutistPercent,
+        angry: angryPercent,
+        negativity: negativityPercent,
+        emotional: emotionalPercent,
+        threat: threatPercent,
+      })
+
       // display results
-      document.getElementById("results").innerHTML = `
+      entry.querySelector(".entryResults").innerHTML = `
         <p><strong>Overall Threat Level: ${totalPercent.toFixed(1)}%</strong>
           <div style = "width:100%; background:#f0ebe8; border:1px solid #d9d0cc; border-radius:10px;">
             <div style = "background:#6b6057; width:${totalPercent}%; height:12px; border-radius:10px;"></div>
@@ -123,7 +184,74 @@
           <div style = "width:100%; background:#f0ebe8; border:1px solid #d9d0cc; border-radius:10px;">
             <div style = "background:#2B3A67; width:${emotionalPercent}%; height:7px; border-radius:10px;"></div>
           </div></p> `
+
+      updateChart()
+    })
+}
+
+    function updateChart() {
+      const sorted = results.sort((a, b) => a.year - b. year)
+      const labels = sorted.map(r => r.year)
+      const totalData = sorted.map(r => r.total)
+      const threatData = sorted.map(r => r.threat)
+      const usVSthemData = sorted.map(r => r.usVSthem)
+      const absolutistData = sorted.map(r => r.absolutist)
+      const angryData = sorted.map(r => r.angry)
+      const negativityData = sorted.map(r => r.negativity)
+      const emotionalData = sorted.map(r => r.emotional)
+
+      if (window.myChart instanceof Chart) {
+        window.myChart.destroy()
+      }
+
+      const ctx = document.getElementById('myChart').getContext('2d')
+      window.myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Overall', data: totalData, borderColor: "#6b6057", fill: false },
+            { label: 'Threat', data: threatData, borderColor: "maroon", fill: false },
+            { label: 'Us vs Them', data: usVSthemData, borderColor: "firebrick", fill: false },
+            { label: 'Absolutist', data: absolutistData, borderColor: "indianred", fill: false },
+            { label: 'Anger', data: angryData, borderColor: "palevioletred", fill: false },
+            { label: 'Negativity', data: negativityData, borderColor: "#7B5EA7", fill: false },
+            { label: 'Emotional Charge', data: emotionalData, borderColor: "#2B3A67", fill: false }
+         ]
+       }, 
+       options: {
+          scales: {
+            y: { min: 0, max:100 }
+          }
+       }
+   })
+  }
+    function toggleChart() {
+      const chart = document.getElementById('myChart')
+      const button = event.target
+      if (chart.style.display == "none") {
+        chart.style.display = "block"
+        button.textContent = "Hide Chart"
+      } else {
+        chart.style.display = "none"
+        button.textContent = "Show Chart"
+      }
     }
+
+function addTextBox() {
+    const container = document.getElementById("textBoxes")
+    const div = document.createElement("div")
+    div.className = "textEntry"
+    div.innerHTML = `
+        <input type="number" class="yearInput" placeholder="Year (e.g. 1939)" min="1900" style="padding: 10px; border: 1px solid #d9d0cc; border-radius: 10px; background-color: #fffcfb;">
+        <div class="textAndResults">
+            <textarea class="inputText" rows="5"></textarea>
+            <div class="entryResults"></div>
+        </div>
+    `
+    container.appendChild(div)
+}
+
   </script>
   </body>
 </html>
