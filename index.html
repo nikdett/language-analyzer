@@ -202,7 +202,7 @@
 
   <div class="container">
     <h1>Language Analyzer</h1>
-    <p class="subtitle">Paste your text here to analyze it for signs of escalating rhetoric.</p>
+    <p class="subtitle">Paste your text here to analyze it for signs of escalating rhetoric:</p>
 
     <div id="textBoxes">
       <!-- Dynamic storage contents populate here -->
@@ -318,7 +318,7 @@ function addTextBox(initialText = "", initialYear = "") {
         <button class="remove-btn" onclick="removeTextBox(this)">×</button>
         <input type="number" class="yearInput" placeholder="Year" min="1900" value="${initialYear}" oninput="saveToStorage()">
         <div class="textAndResults">
-          <textarea class="inputText" rows="5" placeholder="Paste historical text transcript fragment here..." oninput="saveToStorage()">${initialText}</textarea>
+          <textarea class="inputText" rows="5" placeholder=" " oninput="saveToStorage()">${initialText}</textarea>
           <div class="entryResults"></div>
         </div>
     `;
