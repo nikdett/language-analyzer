@@ -1,257 +1,476 @@
 <!DOCTYPE HTML>
 <html lang="en">
-  <head>
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Language Analyzer</title>
+  <!-- Explicit clean font import to override browser defaults -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body 
-    {
+    /* Strict global font overriding */
+    * {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    }
+
+    body {
       background-color: #faf6f3;
+      color: #2c2523;
+      margin: 0;
+      padding: 20px;
     }
-    #results
-    {
-      width: 200px;
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #fdfbf9;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
     }
-    textarea
-    {
+
+    h1 {
+      margin-top: 0;
+      color: #2c2523;
+      font-weight: 700;
+      font-size: 28px;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      color: #6b5a55;
+      margin-bottom: 25px;
+      font-size: 15px;
+    }
+
+    textarea {
+      font-size: 15px;
+      line-height: 1.6;
       background-color: #fffcfb;
       border: 1px solid #d9d0cc;
       border-radius: 10px;
-      padding: 10px;
+      padding: 14px;
+      resize: vertical;
+      width: 100%;
+      box-sizing: border-box;
+      color: #2c2523;
     }
 
     .textEntry {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    margin-bottom: 15px;
-   }
-
-   .yearInput {
-    width: 150px;
-    flex-shrink: 0;
-  }
-
-    .inputText {
-    flex: 1;
-    background-color: #fffcfb;
-    border: 1px solid #d9d0cc;
-    border-radius: 10px;
-    padding: 10px;
-  }
-  .textAndResults {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-  }
-
-  .entryResults {
-    margin-top: 10px;
-    font-size: 14px;
- } 
-  </style>
-  </head>
-  <body>
-    <h1>Language Analyzer</h1>
-    <p>Paste your text here to analyze it for signs of escalating rhetoric: </p>
-    <div id = "textBoxes">
-      <div class="textEntry">
-      <input type="number" class="yearInput" placeholder="Year (e.g. 1939)" min="1900" style="padding: 10px; border: 1px solid #d9d0cc; border-radius: 10px; background-color: #fffcfb;">
-      <div class="textAndResults">
-        <textarea class="inputText" rows="5"></textarea>
-        <div class="entryResults"></div>
-</div>
-</div>
-    </div>
-    <button onclick = "addTextBox()">+ Add Text Box</button>
-    <button onclick = "analyze()">Analyze all</button>  
-    <div id = "results"></div>
-    <button onclick = "toggleChart()">Hide Chart</button></button>
-    <canvas id="myChart" width = "600" height = "300" style = "margin-top: 30px;"></canvas>
-
-    <script>
-      const results = []
-
-      // detect words and add to score 
-      function detectWords(cleanWords, wordList)
-      {
-        let score = 0      
-        for (const word of cleanWords)
-        {
-          if (wordList.includes(word))
-          {
-            score++
-          }
-        }
-        return score
-      }
-    
-    function analyze()
-    {
-      results.length = 0
-      // get and clean text and date
-      const entries = document.querySelectorAll(".textEntry")
-
-      entries.forEach(entry => {
-        const text = entry.querySelector(".inputText").value
-        const year = entry.querySelector(".yearInput").value || "Unknown"
-
-        if (text.trim() === " ") return
-      
-        // split sentances into individual words
-        const words = text.split(" ") 
-
-        // make input all lowercase and deobfuscate
-        const cleanWords = words.map(w => w.toLowerCase()
-          .replace(/0/g, "o")
-          .replace(/1/g, "i")
-          .replace(/3/g, "e")
-          .replace(/4/g, "a")
-          .replace(/[^a-z]/g, ""))
-
-      // word lists 
-      const usVSthemWords = ['barbarian', 'collaborator', 'degenerate', 'demographic', 'enemy', 'foreigner', 'globalist', 'heretic', 'immigrant', 'impure', 'infidel', 'infiltrator', 'ingroup', 'invader', 'native', 'oppressor', 'outcast', 'outsider', 'parasite', 'puppet', 'radical', 'regime', 'replacement', 'separatist', 'subversive', 'traitor', 'tribal', 'tribe', 'undesirable', 'vermin', 'xenophobia', "outsiders", "foreigners", "elites", "globalists", "establishment", "regime", "enemies", "invaders", "infiltrators", "traitors", "patriots", "replace", "destroy", "purge", "cleanse", "reclaim", "takeover", "occupation", "oppressors", "liberators", "collaborators", "puppets", "sheeple", "brainwashed", "awakened", "redpilled", "sheep", "cattle", "vermin", "parasites", "infestation", "invasion", "demographic", "replacement", "native", "pure", "impure", "corrupt", "treasonous"]
-      const threatWords = ['anarchist', 'anarchy', 'arson', 'barbarian', 'barbaric', 'belligerent', 'bigot', 'bigoted', 'bigotry', 'brigand', 'cabal', 'chaos', 'cowardice', 'cult', 'demagogue', 'desperado', 'extremist', 'faction', 'fanatic', 'fanaticism', 'fascism', 'fascist', 'fundamentalism', 'fundamentalist', 'gang', 'gangster', 'illegal', 'insurgent', 'intolerance', 'lawlessness', 'mafia', 'malefactor', 'militant', 'militia', 'mob', 'mobster', 'mutiny', 'nazi', 'nazism', 'outlaw', 'persecutor', 'pillage', 'plunder', 'rabble', 'racketeer', 'reactionary', 'rebel', 'ringleader', 'sabotage', 'sedition', 'totalitarian', 'trafficker', 'treason', 'tyrant', 'tyranny', 'vandal', 'vendetta', 'villain', 'villainous', 'warlord', 'wrongdoer', 'ambush', 'annihilate', 'annihilated', 'armed', 'assassin', 'assassinate', 'assassination', 'attack', 'attacking', 'bomb', 'bombard', 'bombardment', 'bomber', 'combat', 'combatant', 'combative', 'destroyed', 'destroyer', 'destroying', 'explode', 'exterminate', 'fire', 'firearms', 'grenade', 'gun', 'gunpowder', 'hanging', 'hangman', 'hostage', 'invade', 'invader', 'kidnap', 'kill', 'killing', 'lynch', 'manslaughter', 'massacre', 'missile', 'murder', 'murderer', 'murderous', 'poison', 'poisoned', 'poisonous', 'purge', 'raid', 'rifle', 'shoot', 'shooter', 'shooting', 'slaughter', 'slaughterhouse', 'slaughtering', 'stab', 'strangle', 'terror', 'terrorism', 'terrorist', 'terrorize', 'threat', 'threaten', 'threatening', 'torture', 'war', 'warfare', 'warlike', 'warrior', 'wildfire']
-      const absolutistWords = ['always', 'never', 'every', 'all', 'none', 'nothing', 'everything', 'nobody', 'everyone', 'forever', 'eternal', 'inevitable', 'undeniable', 'indisputable', 'unquestionable', 'irrefutable', 'absolute', 'absolutely', 'totally', 'completely', 'utterly', 'purely', 'solely', 'only', 'must', 'cannot', 'impossible', 'certain', 'certainly', 'definite', 'definitely', 'guaranteed', 'unconditional', 'unconditionally', 'invariably', 'without exception', 'no question', 'beyond doubt', 'plain and simple', 'period', 'full stop', 'end of story', 'that is that', 'no debate', 'fact', 'proven', 'obvious', 'clearly', 'simply', 'just', 'real', 'true', 'false', 'wrong', 'right', 'pure', 'corrupt', 'ultimate', 'final', 'total', 'radical', 'extreme', 'existential', 'fundamental', 'core', 'essential', 'critical', 'decisive', 'supreme', 'dominant', 'inferior', 'superior', 'weak', 'strong', 'coward', 'hero', 'traitor', 'patriot', 'winner', 'loser', 'good', 'evil', 'light', 'darkness', "always", "never", "everyone", "nobody", "all", "none", "completely", "must", "every", "nothing", "everything", "only", "impossible", "certain", "certainly", "undeniable", "obvious", "clearly", "total", "totally", "absolute", "absolutely", "forever", "guaranteed", "definite", "definitely", "invariably", "unconditionally"]
-      const angryWords = ['belligerent', 'bigot', 'bigoted', 'coward', 'cowardly', 'craven', 'deceitful', 'degenerate', 'despicable', 'devious', 'dishonest', 'fanatical', 'fraudster', 'fury', 'greed', 'greedy', 'hateful', 'heinous', 'hostile', 'hubris', 'hypocrite', 'hypocritical', 'idiotic', 'immoral', 'insolent', 'irate', 'irascible', 'jealous', 'livid', 'loathsome', 'malicious', 'malevolent', 'menacing', 'narcissist', 'narcissistic', 'overbearing', 'paranoid', 'pompous', 'presumptuous', 'pretentious', 'raging', 'resentful', 'ruthless', 'savage', 'scheming', 'scoundrel', 'selfish', 'sinister', 'spiteful', 'treacherous', 'vicious', 'vindictive', 'wrath', 'wrathful', 'abandoned', 'abandonment', 'abhor', 'abhorrent', 'abolish', 'abomination', 'abuse', 'accursed', 'accusation', 'accused', 'accuser', 'accusing', 'actionable', 'adder', 'adversary', 'adverse', 'adversity', 'advocacy', 'affront', 'aftermath', 'aggravated', 'aggravating', 'aggravation', 'aggression', 'aggressive', 'aggressor', 'agitated', 'agitation', 'agony', 'alcoholism', 'alienate', 'alienation', 'allegation', 'altercation', 'ambush', 'anarchism', 'anarchist', 'anarchy', 'anathema', 'anger', 'angry', 'anguish', 'animosity', 'animus', 'annihilate', 'annihilated', 'annihilation', 'annoy', 'annoyance', 'annoying', 'antagonism', 'antagonist', 'antagonistic', 'antichrist', 'antipathy', 'antisocial', 'antithesis', 'anxiety', 'argue', 'argument', 'argumentation', 'arguments', 'armament', 'armed', 'arraignment', 'arrogant', 'arson', 'assail', 'assailant', 'assassin', 'assassinate', 'assassination', 'assault', 'asshole', 'atrocious', 'atrocity', 'attack', 'attacking', 'attorney', 'avarice', 'avenger', 'averse', 'aversion', 'awful', 'backbone', 'bad', 'badger', 'badness', 'bane', 'bang', 'banger', 'banish', 'banished', 'banishment', 'bankruptcy', 'banshee', 'barb', 'barbaric', 'bark', 'barrier', 'bastion', 'battalion', 'batter', 'battery', 'battle', 'battled', 'bayonet', 'bear', 'bearish', 'beast', 'beating', 'bee', 'belittle', 'belligerent', 'bellows', 'belt', 'berserk', 'betray', 'betrayal', 'bias', 'bickering', 'bigot', 'bigoted', 'bile', 'birch', 'birthplace', 'bitch', 'bitterly', 'bitterness', 'blackmail', 'blame', 'blasphemous', 'blasphemy', 'blast', 'blatant', 'blaze', 'blemish', 'blockade', 'bloodshed', 'bloodthirsty', 'bloody', 'bogus', 'boisterous', 'bomb', 'bombard', 'bombardment', 'bothering', 'bout', 'boxing', 'brawl', 'brazen', 'brimstone', 'broil', 'broken', 'brunt', 'brutal', 'brutality', 'brute', 'buffet', 'bugaboo', 'bully', 'bummer', 'burial', 'burke', 'busted', 'butcher', 'cacophony', 'cad', 'callous', 'campaigning', 'cancer', 'cane', 'canker', 'cannon', 'carelessness', 'carnage', 'cash', 'casualty', 'catastrophe', 'caution', 'celebrity', 'censor', 'chaff', 'challenge', 'chant', 'chaos', 'chaotic', 'cheat', 'choke', 'claimant', 'clamor', 'clash', 'clashing', 'claw', 'coerce', 'coercion', 'coldness', 'collision', 'collusion', 'combat', 'combatant', 'combative', 'commotion', 'communism', 'complain', 'complaint', 'complicate', 'compress', 'compulsion', 'concealment', 'concussion', 'condemn', 'condemnation', 'condescension', 'confine', 'confined', 'confinement', 'confiscate', 'conflagration', 'conflict', 'confront', 'confusion', 'conquest', 'conspirator', 'consternation', 'constraint', 'contempt', 'contemptible', 'contemptuous', 'contentious', 'contraband', 'contradict', 'controversial', 'convict', 'coop', 'copycat', 'corrupting', 'counsellor', 'coup', 'court', 'crabby', 'cracked', 'cranky', 'crazed', 'crazy', 'crime', 'criminal', 'criminality', 'criticism', 'criticize', 'cross', 'crucifixion', 'cruel', 'cruelly', 'cruelty', 'crunch', 'crusade', 'crushed', 'crushing', 'cur', 'curse', 'cursed', 'cursing', 'cussed', 'cutthroat', 'cutting', 'dabbling', 'daemon', 'damage', 'dame', 'damn', 'damnation', 'darkness', 'dashed', 'dastardly', 'deadly', 'death', 'deceit', 'deceive', 'deceived', 'decry', 'defamatory', 'defect', 'defendant', 'defense', 'defiance', 'defiant', 'deflate', 'defraud', 'defy', 'degeneracy', 'delay', 'deleterious', 'delinquent', 'delusion', 'delusional', 'demand', 'demolish', 'demon', 'demonic', 'denounce', 'denunciation', 'deny', 'deplorable', 'deplore', 'deportation', 'depraved', 'depravity', 'depreciate', 'depreciated', 'depressed', 'deprivation', 'deranged', 'derision', 'derogation', 'derogatory', 'desecration', 'desert', 'deserted', 'deserve', 'desist', 'despair', 'despicable', 'despise', 'despotism', 'destroyed', 'destroyer', 'destroying', 'destruction', 'destructive', 'detainee', 'deterioration', 'detest', 'detonation', 'detract', 'devastate', 'devastating', 'devastation', 'devil', 'diabolical', 'diatribe', 'dictatorial', 'dictatorship', 'difficulty', 'disagree', 'disagreeing', 'disagreement', 'disallowed', 'disappoint', 'disappointed', 'disapprove', 'disapproved', 'disapproving', 'disaster', 'disastrous', 'disclaim', 'discontent', 'discord', 'discriminate', 'discrimination', 'disdain', 'disease', 'disfigured', 'disgrace', 'disgraced', 'disgraceful', 'disgruntled', 'disgust', 'disgusting', 'dishonest', 'dishonor', 'disillusionment', 'disinformation', 'dislike', 'disliked', 'dislocated', 'dismay', 'dismissal', 'disobedience', 'disobedient', 'disobey', 'disparage', 'disparaging', 'disparity', 'displaced', 'displeased', 'dispossessed', 'dispute', 'disqualified', 'disreputable', 'disrespect', 'disrespectful', 'disruption', 'dissension', 'disservice', 'dissident', 'dissolution', 'dissonance', 'distracted', 'distracting', 'distress', 'distressing', 'distrust', 'disturbance', 'disturbed', 'disused', 'divorce', 'dominate', 'domination', 'doomsday', 'dreadful', 'duel', 'dumps', 'dupe', 'duplicity', 'duress', 'dying', 'earthquake', 'effigy', 'egregious', 'elbow', 'elf', 'elimination', 'encumbrance', 'endless', 'enemy', 'enforce', 'enmity', 'enslaved', 'entangled', 'epidemic', 'eradicate', 'eradication', 'erupt', 'eruption', 'escalate', 'eschew', 'evade', 'eviction', 'evil', 'exacerbation', 'exaggerate', 'exasperation', 'excitation', 'excite', 'execution', 'executioner', 'exile', 'expel', 'expletive', 'explode', 'explosive', 'expulsion', 'extermination', 'extinguish', 'failing', 'fallacious', 'falsehood', 'falsification', 'fatal', 'fear', 'fee', 'feeling', 'fenced', 'ferocious', 'ferocity', 'fervor', 'feud', 'feudalism', 'fib', 'fiend', 'fierce', 'fight', 'fighting', 'firearms', 'fits', 'flagrant', 'fleece', 'flog', 'fluctuation', 'foe', 'foray', 'forbidding', 'force', 'forcibly', 'forearm', 'forfeit', 'forsaken', 'foul', 'fraud', 'fraudulent', 'frenetic', 'frenzied', 'friction', 'frightful', 'frowning', 'frustrate', 'frustrated', 'frustration', 'fugitive', 'fuming', 'furious', 'furiously', 'furnace', 'furor', 'fury', 'fuss', 'gall', 'gallows', 'gang', 'gent', 'gibberish', 'glare', 'glaring', 'gnome', 'godless', 'gonorrhea', 'gore', 'gory', 'grab', 'grated', 'grating', 'greed', 'grievance', 'grievous', 'grim', 'grope', 'growl', 'growling', 'grudge', 'gruff', 'grumble', 'grumpy', 'guillotine', 'guilty', 'gun', 'halter', 'hamstring', 'hanging', 'harass', 'harassing', 'harbinger', 'hardened', 'harmful', 'harry', 'harshness', 'hate', 'hateful', 'hating', 'hatred', 'haughty', 'havoc', 'hell', 'hellish', 'hiss', 'hit', 'hoax', 'holocaust', 'homeless', 'homicidal', 'homicide', 'honest', 'hood', 'hoot', 'hopelessness', 'horrible', 'horrid', 'horrific', 'horror', 'hostage', 'hostile', 'hostilities', 'hostility', 'hot', 'howl', 'huff', 'humbug', 'humiliate', 'hunting', 'hurt', 'hurtful', 'hurting', 'hysterical', 'idiocy', 'idiotic', 'ill', 'illegal', 'illegality', 'illegitimate', 'illicit', 'immaturity', 'immoral', 'immorality', 'impermeable', 'implicate', 'impotence', 'imprisoned', 'imprisonment', 'inadmissible', 'inappropriate', 'inattention', 'incarceration', 'incase', 'incendiary', 'incense', 'incest', 'incite', 'incompatible', 'incompetent', 'incongruous', 'inconsiderate', 'inconvenient', 'incredulous', 'incurable', 'indecency', 'indenture', 'indict', 'indifference', 'indignant', 'indignation', 'indoctrination', 'inept', 'inequality', 'inexcusable', 'infamous', 'infanticide', 'infantile', 'inferno', 'infidel', 'infidelity', 'inflict', 'infraction', 'inhibit', 'inhuman', 'inimical', 'injure', 'injurious', 'injury', 'injustice', 'inoperative', 'insane', 'insanity', 'insecure', 'insidious', 'insignificant', 'instinctive', 'insufficiency', 'insult', 'insulting', 'insurrection', 'intense', 'interminable', 'interrupt', 'intimidation', 'intolerable', 'intolerance', 'intolerant', 'intractable', 'intruder', 'intrusive', 'invade', 'invader', 'invasion', 'involution', 'involvement', 'irate', 'ire', 'irreconcilable', 'irritability', 'irritable', 'irritating', 'irritation', 'jab', 'jealous', 'jealousy', 'jeopardize', 'jerk', 'kick', 'kicking', 'kidnap', 'killing', 'lace', 'lagging', 'lash', 'latent', 'lava', 'lawlessness', 'lawsuit', 'lawyer', 'legalized', 'leukemia', 'libel', 'liberate', 'lie', 'lightning', 'limited', 'liquor', 'litigate', 'litigious', 'livid', 'loath', 'loathe', 'loathsome', 'lonely', 'lose', 'losing', 'loss', 'loudness', 'lunacy', 'lunatic', 'lying', 'lynch', 'mad', 'madden', 'madman', 'madness', 'malevolent', 'malice', 'malicious', 'malign', 'malignant', 'malpractice', 'mangle', 'maniac', 'manipulation', 'manslaughter', 'martial', 'masochism', 'massacre', 'mastery', 'meddle', 'melodrama', 'menace', 'menacing', 'mighty', 'militia', 'misbehavior', 'misconception', 'miserable', 'misery', 'mislead', 'misleading', 'misplace', 'misrepresented', 'misstatement', 'mistress', 'misunderstanding', 'mob', 'mocking', 'molestation', 'money', 'monstrosity', 'moody', 'moral', 'morals', 'morbidity', 'mortality', 'mosquito', 'mournful', 'muff', 'mug', 'mule', 'murder', 'murderer', 'murderous', 'musical', 'mutilation', 'mutiny', 'mutter', 'myopia', 'nag', 'nasty', 'negation', 'neglected', 'nepotism', 'nether', 'nettle', 'noisy', 'noncompliance', 'notoriety', 'nuisance', 'nurture', 'objection', 'obliging', 'obliterate', 'obliterated', 'oblivion', 'obnoxious', 'obscenity', 'obstacle', 'obstruct', 'obstructive', 'odious', 'offend', 'offended', 'offender', 'offense', 'offensive', 'onerous', 'opera', 'opinionated', 'opium', 'opponent', 'opposed', 'opposition', 'oppress', 'oppression', 'oppressive', 'oppressor', 'orc', 'orchestra', 'ordeal', 'oust', 'outburst', 'outcry', 'outrage', 'overbearing', 'overpowering', 'overpriced', 'owing', 'painful', 'paralysis', 'pare', 'patter', 'paucity', 'payback', 'penalty', 'penetration', 'penitentiary', 'perdition', 'pernicious', 'perpetrator', 'persecute', 'persecution', 'perverse', 'perversion', 'pervert', 'pessimism', 'pest', 'phony', 'picket', 'picketing', 'pillage', 'pique', 'pirate', 'pitfall', 'playful', 'plunder', 'poaching', 'poison', 'poisoned', 'poisonous', 'polemic', 'politics', 'possessed', 'possession', 'pound', 'poverty', 'pow', 'powerful', 'powerless', 'preclude', 'prejudice', 'prejudicial', 'presumptuous', 'pretending', 'prick', 'prison', 'prisoner', 'profane', 'profanity', 'prohibited', 'prosecute', 'provocation', 'provoking', 'pry', 'psychosis', 'punch', 'punished', 'punishing', 'punishment', 'punitive', 'quandary', 'quarrel', 'rabble', 'rabid', 'rage', 'raging', 'raid', 'rail', 'ram', 'rampage', 'ransom', 'rape', 'rapping', 'rascal', 'rating', 'rave', 'ravenous', 'raving', 'react', 'rebel', 'rebellion', 'recalcitrant', 'recession', 'recidivism', 'reckless', 'recklessness', 'reject', 'rejection', 'rejects', 'remand', 'remiss', 'remove', 'renegade', 'renounce', 'repay', 'repellent', 'reprimand', 'reprisal', 'reproach', 'repudiation', 'resent', 'resentful', 'resentment', 'resign', 'resistance', 'resisting', 'restitution', 'restrain', 'restriction', 'retaliate', 'retaliation', 'retaliatory', 'retract', 'retribution', 'revenge', 'reversal', 'revoke', 'revolt', 'revolting', 'revolution', 'revolver', 'revulsion', 'rheumatism', 'ribbon', 'ridicule', 'ridiculous', 'rifle', 'ringer', 'riot', 'riotous', 'rivalry', 'rob', 'robbery', 'rocket', 'rook', 'row', 'ruined', 'ruinous', 'ruthless', 'saber', 'sabotage', 'saloon', 'sarcasm', 'satanic', 'savage', 'savagery', 'scandalous', 'scapegoat', 'scar', 'scarcity', 'scare', 'schism', 'schizophrenia', 'scoff', 'scold', 'scolding', 'scorching', 'scorn', 'scorpion', 'scoundrel', 'scourge', 'scrapie', 'scream', 'screaming', 'screwed', 'sectarian', 'sedition', 'segregate', 'selfish', 'senseless', 'sentence', 'separatist', 'shackle', 'shaky', 'sham', 'sharpen', 'shatter', 'shell', 'shit', 'shiver', 'shock', 'shoddy', 'shoot', 'shooting', 'shoplifting', 'shortage', 'shot', 'shout', 'shove', 'shriek', 'shrill', 'shun', 'sickening', 'simmer', 'sin', 'sinful', 'sinister', 'sinner', 'sisterhood', 'sizzle', 'skewed', 'skid', 'skirmish', 'slam', 'slander', 'slap', 'slash', 'slaughter', 'slaughterhouse', 'slaughtering', 'slave', 'slavery', 'slay', 'slayer', 'slur', 'slut', 'sly', 'smack', 'smash', 'smell', 'smite', 'smother', 'smuggler', 'snarl', 'snarling', 'sneak', 'sneer', 'socialist', 'soldier', 'sordid', 'sore', 'spank', 'spanking', 'spat', 'spear', 'spine', 'spite', 'spiteful', 'squelch', 'stab', 'stalemate', 'standoff', 'standstill', 'steal', 'sterling', 'stifled', 'stigma', 'sting', 'stingy', 'stolen', 'stone', 'storm', 'storming', 'strained', 'strangle', 'strife', 'strike', 'stripped', 'struggle', 'subjugation', 'subsidy', 'subversion', 'subversive', 'sucker', 'sue', 'suffocation', 'suicidal', 'suicide', 'sullen', 'suppress', 'suppression', 'supremacy', 'surcharge', 'surly', 'suspicious', 'swastika', 'tackle', 'talons', 'tariff', 'taunt', 'tease', 'teasing', 'tempest', 'tension', 'terrible', 'terrorism', 'terrorist', 'terrorize', 'theft', 'theocratic', 'thief', 'thoughtless', 'thrash', 'threat', 'threaten', 'threatening', 'thresh', 'throttle', 'thug', 'thump', 'thundering', 'tiff', 'tighten', 'tirade', 'tolerate', 'torment', 'torpedo', 'tortious', 'torture', 'touchy', 'toughness', 'traitor', 'traumatic', 'treacherous', 'treachery', 'treason', 'treat', 'tree', 'tremor', 'trespass', 'trickery', 'tripping', 'troll', 'troublesome', 'tumult', 'tumultuous', 'turbulence', 'turmoil', 'tussle', 'tyrannical', 'tyrant', 'ulcer', 'ultimatum', 'unattainable', 'unbridled', 'uncaring', 'uncertain', 'uncontrollable', 'underpaid', 'undesirable', 'unequal', 'unfair', 'unfairness', 'unforgiving', 'unfriendly', 'unfulfilled', 'ungrateful', 'unhappy', 'unjust', 'unjustifiable', 'unkind', 'unlawful', 'unlucky', 'unpaid', 'unruly', 'unsettled', 'unsympathetic', 'unthinkable', 'untoward', 'untrustworthy', 'upheaval', 'uprising', 'upset', 'usurp', 'usurped', 'vampire', 'vehement', 'vendetta', 'vengeance', 'vengeful', 'venom', 'venomous', 'vent', 'vermin', 'versus', 'veto', 'vicious', 'victim', 'victimized', 'villainous', 'vindicate', 'vindictive', 'violation', 'violence', 'violent', 'violently', 'virulence', 'volatility', 'vote', 'vulgarity', 'waffle', 'warden', 'warfare', 'warlike', 'warp', 'warrior', 'wasted', 'wasteful', 'wench', 'whip', 'willful', 'wimpy', 'wince', 'wireless', 'witch', 'witchcraft', 'wop', 'words', 'worthless', 'wound', 'wrangling', 'wrath', 'wreak', 'wreck', 'wrecked', 'wretch', 'wring', 'wrongdoing', 'wrongful', 'wrongly', 'yell', 'yelp', 'youth'];
-      const negativeWords = ['abnormal', 'appalling', 'atrocious', 'awful', 'barbarism', 'brutal', 'brutality', 'corrupt', 'corruption', 'cowardice', 'criminal', 'cruel', 'cruelty', 'damaging', 'dangerous', 'deadly', 'deceit', 'deceptive', 'deplorable', 'depraved', 'destructive', 'deviant', 'diabolic', 'diabolical', 'disgraceful', 'dishonest', 'disreputable', 'dreadful', 'evil', 'failure', 'fake', 'falsehood', 'fatal', 'filthy', 'fraud', 'fraudulent', 'ghastly', 'grim', 'harmful', 'hideous', 'horrendous', 'horrific', 'hostile', 'ignorant', 'immoral', 'incompetent', 'infamous', 'injustice', 'menacing', 'misleading', 'monstrous', 'nefarious', 'offensive', 'oppressive', 'outrageous', 'pathetic', 'poisonous', 'reckless', 'reprehensible', 'revolting', 'rotten', 'shameful', 'sinister', 'toxic', 'treacherous', 'ugly', 'unethical', 'unjust', 'untrustworthy', 'vicious', 'vile', 'violent', 'wicked', 'worthless', 'abandon', 'abandoned', 'abandonment', 'abduction', 'aberrant', 'aberration', 'abhor', 'abhorrent', 'abject', 'abnormal', 'abolish', 'abolition', 'abominable', 'abomination', 'abort', 'abortion', 'abortive', 'abrasion', 'abrogate', 'abscess', 'absence', 'absent', 'absentee', 'absenteeism', 'absurd', 'absurdity', 'abundance', 'abuse', 'abysmal', 'abyss', 'accident', 'accidental', 'accursed', 'accusation', 'accusative', 'accused', 'accuser', 'accusing', 'ache', 'aching', 'acid', 'actionable', 'adder', 'addiction', 'adipose', 'adjudicate', 'admonition', 'adrift', 'adulterated', 'adultery', 'adversary', 'adverse', 'adversity', 'afflict', 'afflicted', 'affliction', 'affront', 'afraid', 'aftermath', 'aftertaste', 'aggravated', 'aggravating', 'aggravation', 'aggression', 'aggressive', 'aggressor', 'aghast', 'agitated', 'agitation', 'agonizing', 'agony', 'aground', 'ail', 'ailing', 'aimless', 'airs', 'alarm', 'alarming', 'alcoholism', 'alien', 'alienate', 'alienated', 'alienation', 'alimony', 'allegation', 'allege', 'aloof', 'altercation', 'ambiguous', 'ambush', 'amnesia', 'amphetamines', 'anaconda', 'anal', 'anarchism', 'anarchist', 'anarchy', 'anathema', 'ancient', 'anger', 'angina', 'angling', 'angry', 'anguish', 'animosity', 'animus', 'annihilate', 'annihilated', 'annihilation', 'annoy', 'annoyance', 'annoying', 'annul', 'annulment', 'anomaly', 'anonymous', 'antagonism', 'antagonist', 'antagonistic', 'anthrax', 'antichrist', 'antipathy', 'antiquated', 'antisocial', 'antithesis', 'anxiety', 'anxious', 'apache', 'apathetic', 'apathy', 'aphid', 'appalling', 'appendicitis', 'apprehension', 'apprehensive', 'appropriation', 'archaic', 'arduous', 'argue', 'argument', 'argumentative', 'arid', 'armaments', 'armed', 'arraignment', 'arrears', 'arrest', 'arrogance', 'arrogant', 'arsenic', 'arson', 'artillery', 'ash', 'ashamed', 'ashes', 'ass', 'assail', 'assailant', 'assassin', 'assassinate', 'assassination', 'assault', 'asshole', 'astray', 'astringent', 'asylum', 'atheism', 'atherosclerosis', 'atrocious', 'atrocity', 'atrophy', 'attack', 'attacking', 'attenuated', 'attenuation', 'audacity', 'austere', 'austerity', 'autocratic', 'autopsy', 'avalanche', 'avarice', 'avenger', 'averse', 'aversion', 'avoid', 'avoidance', 'awful', 'awkwardness', 'awry', 'babble', 'babbling', 'baboon', 'backward', 'backwards', 'backwater', 'bacteria', 'bacterium', 'bad', 'badger', 'badly', 'badness', 'bailiff', 'bait', 'bale', 'balk', 'balm', 'ban', 'bandit', 'bane', 'bang', 'banger', 'banish', 'banished', 'banishment', 'bankrupt', 'bankruptcy', 'banshee', 'barb', 'barbarian', 'barbaric', 'barbarism', 'bark', 'barred', 'barren', 'barricade', 'barrier', 'baseless', 'bastard', 'batter', 'battered', 'battery', 'battle', 'battled', 'battlefield', 'bawdy', 'bayonet', 'bearer', 'beast', 'beastly', 'beating', 'befall', 'beg', 'beggar', 'begging', 'behemoth', 'beholden', 'belated', 'belittle', 'belligerent', 'belt', 'bender', 'bereaved', 'bereavement', 'bereft', 'berserk', 'bestial', 'betray', 'betrayal', 'beware', 'bewildered', 'bias', 'biased', 'bickering', 'bier', 'bigot', 'bigoted', 'bile', 'biopsy', 'birch', 'birthplace', 'bitch', 'bite', 'bitterly', 'bitterness', 'bizarre', 'blackjack', 'blackmail', 'blackness', 'blame', 'bland', 'blasphemous', 'blasphemy', 'blast', 'blatant', 'blather', 'blaze', 'bleak', 'bleeding', 'blemish', 'blight', 'blighted', 'blinded', 'blindly', 'blindness', 'blister', 'bloated', 'blob', 'blockade', 'bloodshed', 'bloodthirsty', 'bloody', 'blot', 'blower', 'blowout', 'blues', 'bluff', 'blunder', 'blur', 'blurred', 'blush', 'boast', 'boasting', 'bog', 'bogus', 'boil', 'boilerplate', 'boisterous', 'bomb', 'bombard', 'bombardment', 'bombed', 'bondage', 'bonds', 'boo', 'booby', 'bookworm', 'booze', 'bore', 'boredom', 'boring', 'borrower', 'bother', 'bothering', 'bottom', 'bound', 'bout', 'bovine', 'boycott', 'brag', 'brandy', 'bravado', 'brawl', 'brazen', 'breach', 'breakdown', 'breakneck', 'breakup', 'bribe', 'bribery', 'brigade', 'brimstone', 'bristle', 'broadside', 'broil', 'broke', 'broken', 'brothel', 'bruise', 'brunt', 'brutal', 'brutality', 'brute', 'buck', 'buffet', 'bug', 'bugaboo', 'bulbous', 'bully', 'bum', 'bummer', 'burdensome', 'bureaucracy', 'bureaucrat', 'burglar', 'burglary', 'burial', 'buried', 'burke', 'burnt', 'busted', 'butcher', 'butt', 'buzzed', 'cabal', 'cacophony', 'cad', 'cadaver', 'cage', 'calculating', 'callous', 'calls', 'campaigning', 'cancel', 'cancer', 'canker', 'cannibal', 'cannibalism', 'cannon', 'captive', 'captivity', 'captor', 'capture', 'carcass', 'carcinoma', 'cardiomyopathy', 'carelessness', 'caricature', 'caries', 'carnage', 'carnal', 'carnivorous', 'cartel', 'case', 'casket', 'caste', 'casualty', 'cataract', 'catastrophe', 'catheter', 'caution', 'cede', 'celebrity', 'cemetery', 'censor', 'censure', 'cess', 'cessation', 'chaff', 'chafing', 'chagrin', 'challenge', 'chaos', 'chaotic', 'charade', 'chargeable', 'charmed', 'chase', 'chastisement', 'chatty', 'cheap', 'cheat', 'cheesecake', 'chicane', 'childish', 'chilly', 'chloroform', 'choke', 'cholera', 'chop', 'chore', 'chronic', 'cigarette', 'circumvention', 'clamor', 'clash', 'clashing', 'claw', 'cloister', 'clouded', 'cloudiness', 'clump', 'clumsy', 'cocaine', 'coerce', 'coercion', 'coffin', 'cold', 'coldly', 'coldness', 'colic', 'collapse', 'collision', 'collusion', 'coma', 'comatose', 'combat', 'combatant', 'combative', 'committal', 'commotion', 'communism', 'communist', 'competition', 'complain', 'complaint', 'complexed', 'complexity', 'complicate', 'complicated', 'complication', 'complicity', 'compost', 'compulsion', 'compulsory', 'conceal', 'concealed', 'concealment', 'conceit', 'conceited', 'concussion', 'condemn', 'condemnation', 'condescending', 'condescension', 'confess', 'confession', 'confine', 'confined', 'confinement', 'confiscate', 'confiscation', 'conflagration', 'conflict', 'conflicting', 'confound', 'confounded', 'confuse', 'confusion', 'congestion', 'conjuring', 'conquest', 'conspirator', 'conspire', 'consternation', 'constipation', 'constrain', 'constrained', 'constraint', 'contagion', 'contagious', 'contaminate', 'contaminated', 'contamination', 'contempt', 'contemptible', 'contemptuous', 'contentious', 'contraband', 'contracted', 'contradict', 'contradiction', 'contradictory', 'contrary', 'contrasted', 'contravene', 'contravention', 'controversial', 'controversy', 'convict', 'conviction', 'coop', 'copy', 'copycat', 'coroner', 'corporal', 'corpse', 'correction', 'corrosion', 'corrosive', 'corrupt', 'corrupting', 'corruption', 'cough', 'counsellor', 'coursing', 'covet', 'coward', 'cowardice', 'cowardly', 'crabby', 'crack', 'cracked', 'cracking', 'cramp', 'cramped', 'crank', 'cranky', 'crap', 'crash', 'crawl', 'crazed', 'crazy', 'creaking', 'creature', 'creep', 'crime', 'criminal', 'criminality', 'cringe', 'cripple', 'crippled', 'crisis', 'crisp', 'critic', 'criticism', 'criticize', 'crook', 'cross', 'crouching', 'cruciate', 'crucifixion', 'crude', 'cruel', 'cruelly', 'cruelty', 'crumbling', 'crunch', 'crusade', 'crushed', 'crushing', 'crusty', 'cry', 'crying', 'crypt', 'cuckold', 'cuckoo', 'cull', 'culpability', 'culpable', 'culprit', 'cult', 'cumbersome', 'cunning', 'cupping', 'cur', 'curse', 'cursed', 'cursing', 'cursory', 'cutter', 'cutthroat', 'cutting', 'cyanide', 'cyclone', 'cyst', 'cytomegalovirus', 'dabbling', 'daemon', 'daft', 'dagger', 'damage', 'damages', 'damn', 'damnation', 'damned', 'damper', 'dandruff', 'dandy', 'danger', 'dangerous', 'darken', 'darkened', 'darkness', 'dashed', 'dastardly', 'dazed', 'deactivate', 'deadlock', 'deadly', 'death', 'debacle', 'debauchery', 'debris', 'debt', 'debtor', 'decay', 'decayed', 'deceased', 'deceit', 'deceitful', 'deceive', 'deceived', 'deceiving', 'deception', 'deceptive', 'declination', 'decline', 'declining', 'decomposition', 'decrease', 'decrement', 'decrepit', 'decry', 'deduct', 'defamation', 'defamatory', 'default', 'defeat', 'defeated', 'defect', 'defection', 'defective', 'defenseless', 'deferral', 'defiance', 'defiant', 'deficiency', 'deficit', 'deflate', 'deflation', 'deform', 'deformed', 'deformity', 'defraud', 'defunct', 'defy', 'degeneracy', 'degenerate', 'degradation', 'degrade', 'degrading', 'delay', 'delayed', 'deleterious', 'deletion', 'delinquency', 'delinquent', 'delirious', 'delirium', 'deluge', 'delusion', 'delusional', 'demand', 'demanding', 'demented', 'dementia', 'demise', 'demolish', 'demolition', 'demon', 'demonic', 'demoralized', 'denial', 'denied', 'denounce', 'denunciation', 'deny', 'denying', 'departed', 'departure', 'dependence', 'dependency', 'dependent', 'deplorable', 'deplore', 'deport', 'deportation', 'depraved', 'depravity', 'depreciate', 'depreciated', 'depreciation', 'depress', 'depressed', 'depressing', 'depression', 'depressive', 'deprivation', 'deranged', 'derelict', 'derision', 'derogation', 'derogatory', 'desecration', 'desert', 'deserted', 'desertion', 'desist', 'desolation', 'despair', 'despairing', 'desperate', 'despicable', 'despise', 'despotic', 'despotism', 'destitute', 'destroyed', 'destroyer', 'destroying', 'destruction', 'destructive', 'detachment', 'detain', 'detainee', 'detention', 'deteriorate', 'deteriorated', 'deterioration', 'detest', 'detonate', 'detract', 'detriment', 'detrimental', 'detritus', 'devastate', 'devastating', 'devastation', 'devil', 'devilish', 'devious', 'devolution', 'devour', 'diabolical', 'diagnosis', 'diatribe', 'dictator', 'dictatorial', 'dictatorship', 'die', 'difficulties', 'difficulty', 'digress', 'dilapidated', 'dilute', 'diminish', 'diminished', 'din', 'dire', 'dirt', 'dirty', 'disability', 'disable', 'disabled', 'disaffected', 'disagree', 'disagreeing', 'disagreement', 'disallowed', 'disappoint', 'disappointed', 'disappointing', 'disappointment', 'disapproval', 'disapprove', 'disapproved', 'disapproving', 'disaster', 'disastrous', 'disbelieve', 'discards', 'discharge', 'discipline', 'disclaim', 'discoloration', 'discolored', 'discomfort', 'disconnect', 'disconnected', 'disconnection', 'discontent', 'discontinue', 'discontinuity', 'discord', 'discourage', 'discouragement', 'discredit', 'discriminate', 'discriminating', 'discrimination', 'disdain', 'disease', 'diseased', 'disembodied', 'disengagement', 'disfigured', 'disgrace', 'disgraced', 'disgraceful', 'disgruntled', 'disgust', 'disgusting', 'disheartened', 'disheartening', 'dishonest', 'dishonesty', 'dishonor', 'disillusionment', 'disinformation', 'disingenuous', 'disintegrate', 'disintegration', 'disinterested', 'dislike', 'disliked', 'dislocated', 'dismal', 'dismay', 'dismemberment', 'dismissal', 'disobedience', 'disobedient', 'disobey', 'disorder', 'disorderly', 'disorganized', 'disparage', 'disparaging', 'disparity', 'dispassionate', 'dispel', 'dispersion', 'displace', 'displeased', 'displeasure', 'disposal', 'dispossessed', 'dispute', 'disqualification', 'disqualified', 'disqualify', 'disregard', 'disregarded', 'disreputable', 'disrespect', 'disrespectful', 'disruption', 'dissatisfaction', 'dissension', 'dissenting', 'disservice', 'dissident', 'dissolution', 'dissonance', 'distaste', 'distasteful', 'distorted', 'distortion', 'distract', 'distracted', 'distracting', 'distraction', 'distraught', 'distress', 'distressed', 'distressing', 'distrust', 'disturbance', 'disturbed', 'disuse', 'disused', 'divergent', 'diverse', 'divested', 'divestment', 'divorce', 'dizziness', 'dizzy', 'docked', 'doit', 'doldrums', 'dole', 'dolor', 'dominant', 'dominate', 'domination', 'donkey', 'doodle', 'doom', 'doomed', 'doomsday', 'doubt', 'doubtful', 'doubting', 'douche', 'dour', 'downfall', 'drab', 'drainage', 'drawback', 'dread', 'dreadful', 'dreadfully', 'dreary', 'drinking', 'drivel', 'drone', 'drooping', 'drought', 'drown', 'drowsiness', 'drudgery', 'drunken', 'drunkenness', 'dubious', 'dull', 'dumb', 'dummy', 'dumps', 'dun', 'dungeon', 'dupe', 'duplicity', 'duress', 'dust', 'dwarfed', 'dying', 'dysentery', 'earthquake', 'eavesdropping', 'edict', 'effeminate', 'egotistical', 'egregious', 'eject', 'ejection', 'elimination', 'elusive', 'emaciated', 'embargo', 'embarrass', 'embarrassing', 'embarrassment', 'embezzlement', 'embolism', 'embroiled', 'emergency', 'enclave', 'encroachment', 'encumbrance', 'endanger', 'endangered', 'endemic', 'endless', 'enemy', 'enforce', 'enforcement', 'enigmatic', 'enmity', 'enslave', 'enslaved', 'enslavement', 'entangled', 'entanglement', 'entrails', 'envious', 'epidemic', 'epilepsy', 'eradicate', 'eradication', 'erase', 'erosion', 'erotic', 'err', 'errant', 'erratic', 'erratum', 'erroneous', 'error', 'erupt', 'eruption', 'escalate', 'escape', 'eschew', 'espionage', 'estranged', 'euthanasia', 'evacuate', 'evacuation', 'evade', 'evasion', 'evict', 'eviction', 'evil', 'exacerbate', 'exacerbation', 'exacting', 'exaggerate', 'exaggerated', 'examination', 'exasperation', 'excavation', 'excess', 'excise', 'excluded', 'excluding', 'exclusion', 'excrement', 'excruciating', 'excuse', 'execution', 'executioner', 'exhaust', 'exhausted', 'exhaustion', 'exigent', 'exile', 'exorcism', 'expatriate', 'expel', 'expenditure', 'expenses', 'expire', 'expired', 'expletive', 'explode', 'explosion', 'explosive', 'exposed', 'expropriation', 'expulsion', 'exterminate', 'extermination', 'extinct', 'extinguish', 'extrajudicial', 'extremity', 'fabricate', 'fabrication', 'fade', 'faeces', 'failing', 'failure', 'fainting', 'faithless', 'fake', 'fall', 'fallacious', 'fallacy', 'fallible', 'falling', 'fallow', 'falsehood', 'falsely', 'falsification', 'falsify', 'falsity', 'falter', 'famine', 'fanatic', 'farce', 'farcical', 'fasting', 'fat', 'fatal', 'fatality', 'fate', 'fatigue', 'fatigued', 'fatty', 'fault', 'faulty', 'fawn', 'fear', 'fearful', 'fearfully', 'fearing', 'febrile', 'fecal', 'feces', 'fee', 'feeble', 'feeling', 'feigned', 'fell', 'felon', 'felony', 'ferment', 'ferocious', 'ferocity', 'feud', 'feudal', 'feudalism', 'feverish', 'fiasco', 'fib', 'fickle', 'fictitious', 'fiend', 'fierce', 'fight', 'fighting', 'filibuster', 'filth', 'filthy', 'firearms', 'fits', 'flabby', 'flaccid', 'flagging', 'flagrant', 'flake', 'flap', 'flatulence', 'flaunt', 'flaw', 'flea', 'flee', 'fleece', 'fleshy', 'flinch', 'flirt', 'flog', 'flop', 'flounder', 'flu', 'fluctuation', 'foe', 'foiled', 'folly', 'fool', 'foolish', 'foolishness', 'forage', 'foray', 'forbid', 'forbidding', 'force', 'forced', 'forcibly', 'foreboding', 'foreclose', 'forego', 'foreign', 'foreigner', 'forewarned', 'forfeit', 'forfeited', 'forfeiture', 'forgery', 'forget', 'forgotten', 'forlorn', 'formless', 'fornication', 'forsake', 'forsaken', 'foul', 'fracture', 'fragile', 'frailty', 'frantic', 'fraud', 'fraudulent', 'fraught', 'fray', 'frayed', 'freakish', 'freezing', 'frenetic', 'frenzied', 'frenzy', 'fret', 'fright', 'frighten', 'frightened', 'frightful', 'frigid', 'frivolous', 'frostbite', 'froth', 'frown', 'frowning', 'fruitless', 'frustrate', 'frustrated', 'frustration', 'fudge', 'fugitive', 'fumble', 'fume', 'fuming', 'fungus', 'funk', 'furious', 'furor', 'fury', 'fuss', 'fussy', 'futile', 'futility', 'gaby', 'gag', 'gall', 'gallows', 'gamble', 'gambler', 'gambling', 'gang', 'gaol', 'gap', 'garbage', 'garish', 'garnish', 'gash', 'gasping', 'gauche', 'gaunt', 'gent', 'geriatric', 'ghastly', 'ghetto', 'ghostly', 'gibberish', 'glacial', 'glare', 'glaring', 'glib', 'gloom', 'gloomy', 'glum', 'glut', 'gluttony', 'gnome', 'goblin', 'godless', 'gonorrhea', 'goo', 'gore', 'gorge', 'gorilla', 'gory', 'gossip', 'gouge', 'gout', 'government', 'grab', 'grasping', 'grate', 'grated', 'grating', 'grave', 'greed', 'greedy', 'grenade', 'grief', 'grievance', 'grieve', 'grievous', 'grim', 'grime', 'grimy', 'grinding', 'grisly', 'grizzly', 'groan', 'grope', 'gross', 'grotesque', 'grounded', 'groundless', 'growl', 'growling', 'grudge', 'grudgingly', 'gruesome', 'gruff', 'grumble', 'grumpy', 'guerilla', 'guile', 'guillotine', 'guilt', 'guilty', 'guise', 'gull', 'gullible', 'gun', 'gush', 'guzzling', 'gypsy', 'hag', 'haggard', 'hail', 'hairy', 'halfway', 'hallucination', 'halter', 'halting', 'hamper', 'hamstring', 'handicap', 'hanging', 'hangman', 'harass', 'harbinger', 'hardened', 'hardness', 'hardship', 'harlot', 'harm', 'harmful', 'harrowing', 'harry', 'harshness', 'hash', 'hashish', 'hasty', 'hate', 'hateful', 'hating', 'hatred', 'haughty', 'haunt', 'haunted', 'havoc', 'hazard', 'hazardous', 'haze', 'headache', 'heady', 'hearing', 'hearsay', 'hearse', 'heartache', 'heartburn', 'heartless', 'heathen', 'heavily', 'hedonism', 'heel', 'heighten', 'heinous', 'hell', 'hellish', 'helpless', 'helplessness', 'hemorrhage', 'hemorrhoids', 'heresy', 'heretic', 'hermaphrodite', 'heroin', 'herpes', 'herpesvirus', 'hesitation', 'hidden', 'hideous', 'highest', 'hindering', 'hindrance', 'hippie', 'hiss', 'hissing', 'hit', 'hitherto', 'hive', 'hoarse', 'hoary', 'hoax', 'hobo', 'hog', 'hollow', 'holocaust', 'homeless', 'homesick', 'homicidal', 'homicide', 'hood', 'hooked', 'hoot', 'hopeless', 'hopelessness', 'horde', 'horrible', 'horribly', 'horrid', 'horrific', 'horrified', 'horrifying', 'horror', 'horrors', 'hostage', 'hostile', 'hostilities', 'hostility', 'howl', 'huff', 'humble', 'humbug', 'humiliate', 'humiliating', 'humiliation', 'hunch', 'hungry', 'hunter', 'hunting', 'hurricane', 'hurried', 'hurt', 'hurtful', 'hurting', 'hustler', 'hydra', 'hydrocephalus', 'hype', 'hyperbole', 'hypocrisy', 'hypocrite', 'hypocritical', 'hysteria', 'hysterical', 'idiocy', 'idiot', 'idiotic', 'idler', 'idolatry', 'ignorance', 'ignorant', 'ignore', 'ill', 'illegal', 'illegality', 'illegible', 'illegitimate', 'illicit', 'illiterate', 'illness', 'illogical', 'illusion', 'imitated', 'imitation', 'immature', 'immaturity', 'immediately', 'immoral', 'immorality', 'immovable', 'impair', 'impairment', 'impassable', 'impatience', 'impatient', 'impeach', 'impeachment', 'impede', 'imperfection', 'imperfectly', 'impersonate', 'impersonation', 'implacable', 'implicate', 'impolite', 'imposition', 'impossible', 'impotence', 'impotent', 'impound', 'impracticable', 'imprison', 'imprisoned', 'imprisonment', 'impropriety', 'imprudent', 'impure', 'impurity', 'imputation', 'inability', 'inaccessible', 'inaccurate', 'inaction', 'inactivity', 'inadequacy', 'inadequate', 'inadmissible', 'inane', 'inapplicable', 'inappropriate', 'inattention', 'inaudible', 'incalculable', 'incapacity', 'incarceration', 'incase', 'incendiary', 'incense', 'incessant', 'incest', 'incestuous', 'incineration', 'incite', 'inclement', 'incoherent', 'income', 'incompatible', 'incompetence', 'incompetent', 'incompleteness', 'incomprehensible', 'incongruous', 'inconsequential', 'inconsiderate', 'inconsistency', 'inconvenient', 'incorrect', 'incredulous', 'incrimination', 'incubus', 'incur', 'incurable', 'incursion', 'indecent', 'indecision', 'indecisive', 'indefensible', 'indemnify', 'indenture', 'indeterminate', 'indict', 'indictment', 'indifference', 'indigent', 'indignant', 'indignation', 'indistinct', 'indoctrination', 'indolent', 'ineffective', 'ineffectual', 'inefficiency', 'inefficient', 'inept', 'ineptitude', 'inequality', 'inequitable', 'inert', 'inexcusable', 'inexperience', 'inexperienced', 'inexplicable', 'infamous', 'infamy', 'infanticide', 'infantile', 'infarct', 'infect', 'infection', 'infectious', 'inferior', 'inferiority', 'inferno', 'infertility', 'infestation', 'infidel', 'infidelity', 'infiltration', 'infirm', 'infirmity', 'inflammation', 'inflated', 'inflation', 'inflict', 'infliction', 'influence', 'influenza', 'informer', 'infraction', 'infrequently', 'infringement', 'inhibit', 'inhospitable', 'inhuman', 'inhumanity', 'inimical', 'iniquity', 'injunction', 'injure', 'injured', 'injurious', 'injury', 'injustice', 'inmate', 'inoperative', 'insane', 'insanity', 'insecure', 'insecurity', 'insidious', 'insignificance', 'insignificant', 'insipid', 'insolent', 'insolvency', 'insolvent', 'instability', 'instigate', 'instigation', 'insufficiency', 'insufficient', 'insufficiently', 'insult', 'insulting', 'insurgent', 'insurmountable', 'insurrection', 'intense', 'inter', 'interdiction', 'interference', 'interment', 'interminable', 'interrupt', 'interrupted', 'intervention', 'intestate', 'intimidate', 'intimidation', 'intolerable', 'intolerance', 'intolerant', 'intoxicated', 'intractable', 'intrigue', 'intruder', 'intrusion', 'intrusive', 'invade', 'invader', 'invalidate', 'invalidation', 'invalidity', 'invasion', 'involuntary', 'involution', 'irate', 'ire', 'irons', 'irrational', 'irrationality', 'irreconcilable', 'irregular', 'irregularity', 'irrelevant', 'irreparable', 'irresponsible', 'irreverent', 'irrevocable', 'irritability', 'irritable', 'irritating', 'irritation', 'isolated', 'isolation', 'jabber', 'jail', 'jargon', 'jarring', 'jaundice', 'jealous', 'jealousy', 'jeopardize', 'jeopardy', 'john', 'joke', 'jornada', 'jumble', 'junk', 'junta', 'juvenile', 'kern', 'kick', 'kidnap', 'kill', 'killing', 'kite', 'knell', 'knotted', 'labored', 'laborious', 'labyrinth', 'lace', 'lack', 'lacking', 'lackluster', 'laden', 'lag', 'lagging', 'lair', 'lament', 'landslide', 'languid', 'languish', 'languishing', 'lapse', 'larceny', 'lash', 'late', 'lateness', 'latent', 'latrines', 'laughable', 'lava', 'lawlessness', 'lawsuit', 'lawyer', 'lax', 'laxative', 'lazy', 'leak', 'leakage', 'leaky', 'leave', 'leech', 'leeches', 'leer', 'lemon', 'leprosy', 'lessen', 'lesser', 'lethal', 'lethargy', 'leukemia', 'levy', 'lewd', 'liaison', 'liar', 'libel', 'liberal', 'lick', 'lie', 'lifeless', 'limited', 'limp', 'lint', 'liquor', 'listless', 'litigant', 'litigate', 'litigation', 'litigious', 'litter', 'livid', 'loaf', 'loafer', 'loath', 'loathe', 'loathing', 'loathsome', 'lobbyist', 'lockup', 'locust', 'lofty', 'loneliness', 'lonely', 'lonesome', 'loo', 'loom', 'loon', 'loony', 'loot', 'lord', 'lose', 'losing', 'loss', 'lost', 'loudness', 'lounge', 'louse', 'lower', 'lowering', 'lowest', 'lowlands', 'lowly', 'ludicrous', 'lumbering', 'lump', 'lumpy', 'lunacy', 'lunatic', 'lurch', 'lure', 'lurid', 'lurk', 'lurking', 'lush', 'lust', 'lustful', 'lying', 'lynch', 'mace', 'mad', 'madden', 'madman', 'madness', 'mafia', 'maggot', 'makeshift', 'malady', 'malaise', 'malaria', 'malevolent', 'malfeasance', 'malformation', 'malice', 'malicious', 'malign', 'malignancy', 'malignant', 'malpractice', 'mandamus', 'mange', 'mangle', 'mania', 'maniac', 'maniacal', 'manipulate', 'manipulation', 'manslaughter', 'manure', 'mar', 'margin', 'maroon', 'martingale', 'martyr', 'martyrdom', 'masochism', 'massacre', 'materialism', 'materialist', 'maternal', 'meandering', 'meaningless', 'measles', 'meddle', 'mediocre', 'mediocrity', 'melancholic', 'melancholy', 'melee', 'melodrama', 'meltdown', 'menace', 'menacing', 'menial', 'mercenary', 'merciless', 'mess', 'messy', 'metastasis', 'methanol', 'midwife', 'mildew', 'militia', 'mimicry', 'minimize', 'minimum', 'minority', 'mire', 'misbehavior', 'miscarriage', 'mischief', 'mischievous', 'misconception', 'misconduct', 'miserable', 'miserably', 'misery', 'misfortune', 'misguided', 'mishap', 'misinterpretation', 'mislead', 'misleading', 'mismanagement', 'mismatch', 'misnomer', 'misplace', 'misplaced', 'misrepresent', 'misrepresentation', 'misrepresented', 'missing', 'misstatement', 'mistake', 'mistaken', 'mistress', 'mistrust', 'misunderstand', 'misunderstanding', 'misuse', 'mite', 'mob', 'mockery', 'mocking', 'molestation', 'monochrome', 'monopolist', 'monsoon', 'monster', 'monstrosity', 'moody', 'moot', 'morbid', 'morbidity', 'morgue', 'moribund', 'moron', 'moronic', 'morsel', 'mortal', 'mortality', 'mortification', 'mortuary', 'mosquito', 'mother', 'mourn', 'mournful', 'mourning', 'muck', 'mud', 'muddle', 'muddled', 'muddy', 'muff', 'mug', 'mule', 'mum', 'mumble', 'mumps', 'murder', 'murderer', 'murderous', 'murky', 'muss', 'musty', 'mutant', 'mutilated', 'mutilation', 'mutiny', 'mutter', 'muzzle', 'myopia', 'nab', 'nadir', 'nag', 'naive', 'nameless', 'nappy', 'narcotic', 'nasty', 'naughty', 'nausea', 'nauseous', 'nay', 'needful', 'needy', 'nefarious', 'negation', 'negative', 'neglect', 'neglected', 'neglecting', 'negligence', 'negligent', 'negligently', 'negro', 'nepotism', 'nervous', 'nether', 'nettle', 'neuralgia', 'neurosis', 'neurotic', 'nicotine', 'nightmare', 'nihilism', 'noise', 'noisy', 'noncompliance', 'nonsense', 'nonsensical', 'noose', 'nothingness', 'notoriety', 'noxious', 'nuisance', 'nul', 'nullify', 'numb', 'numbness', 'nun', 'oaf', 'obese', 'obesity', 'obi', 'obit', 'obituary', 'objection', 'objectionable', 'oblige', 'obligor', 'obliterate', 'obliterated', 'obliteration', 'oblivion', 'obnoxious', 'obscene', 'obscenity', 'obscurity', 'obstacle', 'obstinate', 'obstruct', 'obstruction', 'obstructive', 'obtuse', 'occult', 'oddity', 'odious', 'odor', 'offend', 'offended', 'offender', 'offense', 'offensive', 'offhand', 'offing', 'ogre', 'olfactory', 'oligarchy', 'omen', 'ominous', 'omit', 'omnipotence', 'onerous', 'onus', 'ooze', 'opaque', 'operatic', 'opiate', 'opinionated', 'opium', 'opponent', 'oppose', 'opposed', 'opposition', 'oppress', 'oppression', 'oppressive', 'oppressor', 'orc', 'ordeal', 'ordnance', 'orphan', 'ostensibly', 'oust', 'outburst', 'outcast', 'outcry', 'outhouse', 'outlandish', 'outlaw', 'outrage', 'outstanding', 'ovation', 'overbearing', 'overburden', 'overcast', 'overdo', 'overdose', 'overdue', 'overestimated', 'overflow', 'overgrown', 'overload', 'overpaid', 'overpower', 'overpowering', 'overpriced', 'oversight', 'overthrow', 'overturn', 'overwhelm', 'overwhelmed', 'owing', 'oxidation', 'pain', 'pained', 'painful', 'painfully', 'pains', 'palsy', 'pandemic', 'pang', 'panic', 'parade', 'paralysis', 'paranoia', 'paraphrase', 'parasite', 'pare', 'parrot', 'parsimonious', 'partisan', 'passe', 'passive', 'passivity', 'patch', 'pathetic', 'patronizing', 'patter', 'paucity', 'pauper', 'pawn', 'payback', 'payment', 'peculiarities', 'pedestrian', 'penal', 'penalty', 'penetration', 'penitentiary', 'perdition', 'peril', 'perilous', 'perish', 'perishable', 'perished', 'perishing', 'perjury', 'pernicious', 'perpetrator', 'perpetuation', 'perplexed', 'perplexity', 'persecute', 'persecution', 'perturbation', 'pertussis', 'perverse', 'perversion', 'pervert', 'perverted', 'pessimism', 'pessimist', 'pest', 'pestilence', 'pet', 'petroleum', 'petty', 'phantom', 'phlegm', 'phony', 'picket', 'picketing', 'pickle', 'pig', 'pigeon', 'piles', 'pillage', 'pimp', 'pimple', 'pine', 'pinion', 'pique', 'piracy', 'pirate', 'pistol', 'pitfall', 'plagiarism', 'plague', 'plaintiff', 'plated', 'player', 'plea', 'plight', 'plodding', 'plummet', 'plunder', 'plunge', 'pneumonia', 'poaching', 'pointless', 'poison', 'poisoned', 'poisoning', 'poisonous', 'poke', 'polemic', 'polio', 'pollute', 'pollution', 'polygamy', 'pomp', 'pompous', 'ponderous', 'poorly', 'pop', 'porcupine', 'porn', 'porno', 'pornographic', 'pornography', 'pose', 'possessed', 'possession', 'posthumous', 'postponement', 'pound', 'poverty', 'powerless', 'prank', 'precarious', 'precinct', 'predatory', 'predicament', 'pregnancy', 'prejudice', 'prejudiced', 'prejudicial', 'premeditated', 'presentment', 'pressure', 'presumptuous', 'pretend', 'pretended', 'pretending', 'pretense', 'pretensions', 'preventive', 'prey', 'prick', 'prickly', 'prison', 'prisoner', 'privy', 'problem', 'procrastinate', 'procrastination', 'prodigal', 'profane', 'profanity', 'profusion', 'prohibited', 'prohibition', 'prolong', 'promiscuous', 'propaganda', 'prosecute', 'prosecution', 'prostitute', 'prostitution', 'provocation', 'provoking', 'pry', 'prying', 'psychosis', 'publicist', 'puffy', 'punch', 'pungent', 'punish', 'punished', 'punishing', 'punishment', 'punitive', 'purgatory', 'purge', 'pus', 'quack', 'quagmire', 'quail', 'quandary', 'quarrel', 'quash', 'quell', 'questionable', 'quicksilver', 'quit', 'quiver', 'quivering', 'quiz', 'quote', 'rabble', 'rabid', 'rabies', 'rack', 'racket', 'radiation', 'radioactive', 'radon', 'rage', 'raging', 'rags', 'raid', 'rail', 'ram', 'rambling', 'rampage', 'rancid', 'ransom', 'rape', 'raptors', 'rascal', 'rash', 'rat', 'rating', 'raucous', 'rave', 'ravenous', 'raving', 'reactionary', 'rear', 'rebel', 'rebuke', 'rebut', 'recalcitrant', 'recession', 'recidivism', 'reckless', 'recklessness', 'redundant', 'reflux', 'refractory', 'refusal', 'refuse', 'refused', 'regress', 'regression', 'regressive', 'regret', 'regrettable', 'regretted', 'regretting', 'regulatory', 'rein', 'reject', 'rejected', 'rejection', 'rejects', 'rekindle', 'relapse', 'relegation', 'relinquish', 'reluctant', 'remains', 'remand', 'remedial', 'remiss', 'remorse', 'removal', 'remove', 'rencontre', 'rend', 'renegade', 'renounce', 'renunciation', 'repellant', 'repellent', 'repelling', 'repress', 'repression', 'reprimand', 'reprint', 'reprisal', 'reproach', 'republic', 'repudiation', 'repulsion', 'rescind', 'rescission', 'resent', 'resentful', 'resentment', 'resign', 'resignation', 'resigned', 'resist', 'resistance', 'resistant', 'resisting', 'restrain', 'restrict', 'restriction', 'restrictive', 'retaliate', 'retaliation', 'retaliatory', 'retard', 'retardation', 'reticent', 'retirement', 'retort', 'retract', 'retraction', 'retrenchment', 'retribution', 'retrograde', 'revenge', 'reversal', 'revive', 'revocation', 'revoke', 'revolt', 'revolting', 'revolution', 'revolver', 'revulsion', 'rheumatism', 'rickety', 'riddled', 'ridicule', 'ridiculous', 'rife', 'rifle', 'rift', 'rigid', 'rigidity', 'rigor', 'rigorous', 'ringer', 'riot', 'riotous', 'risk', 'risky', 'rivalry', 'rob', 'robber', 'robbery', 'rogue', 'rook', 'rot', 'rotting', 'roughness', 'rout', 'row', 'rowdy', 'rubbish', 'rubble', 'rue', 'ruffle', 'rugged', 'ruin', 'ruined', 'ruinous', 'rumor', 'runaway', 'rupture', 'ruse', 'rust', 'rusty', 'ruthless', 'saber', 'sabotage', 'sacrifices', 'sadly', 'sadness', 'sag', 'sap', 'sarcasm', 'sarcoma', 'sardonic', 'satanic', 'saturated', 'savage', 'savagery', 'scab', 'scaffold', 'scalpel', 'scaly', 'scandal', 'scandalous', 'scanty', 'scapegoat', 'scar', 'scarce', 'scarcely', 'scarcity', 'scare', 'scarecrow', 'scavenger', 'scheme', 'schism', 'schizophrenia', 'sciatica', 'scoff', 'scold', 'scolding', 'scorching', 'scorn', 'scorpion', 'scotch', 'scoundrel', 'scourge', 'scrambling', 'scrapie', 'scream', 'screaming', 'screech', 'screwed', 'scrimmage', 'scrub', 'scrutinize', 'scrutiny', 'scum', 'sear', 'secession', 'secluded', 'seclusion', 'secondhand', 'secretion', 'secretive', 'sectarian', 'sedition', 'seduce', 'seduction', 'segregate', 'segregated', 'seize', 'selfish', 'selfishness', 'senile', 'senseless', 'sensual', 'sentence', 'separatist', 'sepsis', 'septic', 'sequestration', 'serene', 'serpent', 'servant', 'serve', 'servile', 'servitude', 'setback', 'sever', 'sewage', 'sewerage', 'shabby', 'shack', 'shackle', 'shady', 'shaking', 'shaky', 'sham', 'shambles', 'shame', 'shameful', 'shameless', 'shanghai', 'shark', 'shatter', 'shattered', 'shed', 'shell', 'shelved', 'shipwreck', 'shit', 'shiver', 'shock', 'shoddy', 'shoot', 'shooting', 'shoplifting', 'shortage', 'shortcoming', 'shot', 'shove', 'showy', 'shriek', 'shrill', 'shrink', 'shrunk', 'shudder', 'shun', 'sick', 'sickening', 'sickly', 'sickness', 'silly', 'sin', 'sinful', 'sinister', 'sinner', 'sinning', 'siren', 'sissy', 'skeptical', 'sketchy', 'skewed', 'skid', 'skip', 'skirmish', 'slack', 'slag', 'slam', 'slander', 'slanderous', 'slap', 'slaughter', 'slaughterhouse', 'slaughtering', 'slave', 'slavery', 'slay', 'slayer', 'sleet', 'slimy', 'slink', 'slip', 'slop', 'sloppy', 'sloth', 'slouch', 'slough', 'slowness', 'sludge', 'slug', 'sluggish', 'slum', 'slump', 'slur', 'slush', 'slut', 'sly', 'smack', 'small', 'smash', 'smashed', 'smattering', 'smell', 'smelling', 'smirk', 'smite', 'smoker', 'smother', 'smudge', 'smug', 'smuggle', 'smuggler', 'smuggling', 'smut', 'snag', 'snags', 'snake', 'snare', 'snarl', 'snarling', 'sneak', 'sneaking', 'sneer', 'sneeze', 'snide', 'snob', 'soak', 'sob', 'socialist', 'soil', 'soiled', 'somatic', 'somber', 'soot', 'sorcery', 'sordid', 'sore', 'sorely', 'soreness', 'sorrow', 'sorrowful', 'sortie', 'soulless', 'soulmate', 'sour', 'spank', 'spasm', 'spat', 'spear', 'speck', 'spectacle', 'specter', 'spectral', 'speculation', 'spent', 'spine', 'spinster', 'spite', 'spiteful', 'splinter', 'split', 'splitting', 'spoil', 'spoiler', 'spoke', 'sponge', 'spook', 'sprain', 'spree', 'sprite', 'spurious', 'squall', 'squatter', 'squeamish', 'squelch', 'squirm', 'stab', 'staggering', 'stagnant', 'stain', 'stale', 'stalk', 'standoff', 'standstill', 'staring', 'stark', 'startle', 'starvation', 'starved', 'starving', 'stationary', 'stave', 'steal', 'stealing', 'stealthy', 'stereotype', 'stereotyped', 'sterile', 'sterility', 'sterling', 'stern', 'stiff', 'stiffness', 'stifle', 'stifled', 'stigma', 'stillborn', 'sting', 'stinging', 'stingy', 'stink', 'stinking', 'stint', 'stocks', 'stolen', 'stone', 'stoned', 'stools', 'stoppage', 'storm', 'stormy', 'strained', 'straits', 'stranded', 'stranger', 'strangle', 'stray', 'stress', 'strife', 'strike', 'strip', 'stripe', 'stripped', 'stroke', 'struggle', 'strut', 'stuffy', 'stumble', 'stunned', 'stunted', 'stupid', 'stupidity', 'stupor', 'sty', 'subdue', 'subject', 'subjected', 'subjection', 'subjugation', 'subordinate', 'subpoena', 'subsidence', 'subsidy', 'subsist', 'subtract', 'subversion', 'subversive', 'subvert', 'succulent', 'succumb', 'suck', 'sucker', 'sue', 'suffer', 'sufferer', 'suffering', 'suffocating', 'suffocation', 'suicidal', 'suicide', 'sullen', 'summons', 'sunk', 'superficial', 'superfluous', 'superstition', 'superstitious', 'suppress', 'suppression', 'supremacy', 'surcharge', 'surly', 'surrender', 'surrendering', 'surround', 'susceptible', 'suspect', 'suspension', 'suspicion', 'suspicious', 'swab', 'swamp', 'swampy', 'swastika', 'swelling', 'swig', 'swine', 'swollen', 'symptom', 'syncope', 'synonymous', 'taboo', 'taint', 'talons', 'tangled', 'tantalizing', 'tardiness', 'tardy', 'tariff', 'tarnish', 'tarry', 'tasteless', 'taunt', 'tax', 'tease', 'teasing', 'tedious', 'tedium', 'teens', 'tempest', 'temptation', 'tenement', 'terminal', 'termination', 'termite', 'terrible', 'terror', 'terrorism', 'terrorist', 'terrorize', 'tetanus', 'tether', 'theft', 'theism', 'theocratic', 'thief', 'thirsty', 'thorn', 'thorny', 'thoughtless', 'thrash', 'threat', 'threaten', 'threatening', 'thresh', 'throb', 'throttle', 'thug', 'thump', 'thundering', 'thwart', 'tiff', 'timid', 'timidity', 'tipsy', 'tirade', 'tired', 'tiredness', 'tiresome', 'tit', 'toad', 'tobacco', 'toilet', 'toils', 'tolerate', 'toothache', 'torment', 'torn', 'torpedo', 'torrid', 'tort', 'tortious', 'torture', 'touched', 'touchy', 'tough', 'toxic', 'toxin', 'tragedy', 'tragic', 'traitor', 'tramp', 'trance', 'transgression', 'trappings', 'traps', 'trash', 'trashy', 'traumatic', 'travail', 'travesty', 'treacherous', 'treachery', 'treason', 'treat', 'trembling', 'tremor', 'trepidation', 'trespass', 'tribulation', 'tribunal', 'trick', 'trickery', 'trifle', 'tripping', 'troll', 'troublesome', 'trumpet', 'tumble', 'tumor', 'tumour', 'tumult', 'tumultuous', 'turbulence', 'turbulent', 'turmoil', 'twitch', 'typhoon', 'tyrannical', 'tyranny', 'tyrant', 'ugliness', 'ugly', 'ulcer', 'ulterior', 'ultimatum', 'unable', 'unacceptable', 'unaccountable', 'unapproved', 'unattached', 'unattainable', 'unattractive', 'unauthorized', 'unavoidable', 'unaware', 'unbearable', 'unbeaten', 'unbelief', 'unbelievable', 'unborn', 'unbridled', 'uncanny', 'uncaring', 'uncertain', 'unchangeable', 'unclean', 'uncomfortable', 'unconscionable', 'unconscious', 'unconstitutional', 'uncontrollable', 'uncontrolled', 'undecided', 'undermined', 'underpaid', 'undersized', 'undesirable', 'undesired', 'undo', 'uneasiness', 'uneasy', 'uneducated', 'unemployed', 'unequal', 'uneven', 'unexpected', 'unexplained', 'unfair', 'unfairness', 'unfaithful', 'unfavorable', 'unfinished', 'unforgiving', 'unfortunate', 'unfriendly', 'unfulfilled', 'unfurnished', 'ungodly', 'ungrateful', 'unhappiness', 'unhappy', 'unhealthy', 'unholy', 'unimaginable', 'unimportant', 'unimpressed', 'unimproved', 'uninformed', 'uninitiated', 'uninspired', 'unintelligible', 'unintentionally', 'uninterested', 'uninteresting', 'unjust', 'unjustifiable', 'unjustified', 'unkind', 'unknown', 'unlawful', 'unlicensed', 'unlucky', 'unmanageable', 'unnatural', 'unofficial', 'unpaid', 'unpleasant', 'unpopular', 'unpredictable', 'unprepared', 'unproductive', 'unprofitable', 'unprotected', 'unpublished', 'unreliable', 'unrequited', 'unruly', 'unsafe', 'unsatisfactory', 'unsatisfied', 'unsavory', 'unscrupulous', 'unsettled', 'unsightly', 'unsophisticated', 'unspeakable', 'unstable', 'unsuccessful', 'unsuitable', 'unsung', 'unsupported', 'unsustainable', 'unsympathetic', 'untamed', 'untenable', 'unthinkable', 'untidy', 'untie', 'untimely', 'untitled', 'untold', 'untoward', 'untrained', 'untrue', 'untrustworthy', 'unwarranted', 'unwashed', 'unwelcome', 'unwell', 'unwillingness', 'unwise', 'unwitting', 'unworthy', 'unyielding', 'upheaval', 'uphill', 'uprising', 'uproar', 'upset', 'urchin', 'urgent', 'useless', 'usurp', 'usurped', 'usury', 'vacancy', 'vacuous', 'vague', 'vagueness', 'vainly', 'vampire', 'vanished', 'vanity', 'varicella', 'varicose', 'vegetative', 'vehement', 'vendetta', 'vengeance', 'vengeful', 'venom', 'venomous', 'verbosity', 'verge', 'vermin', 'versus', 'vertigo', 'veto', 'vice', 'vicious', 'victim', 'victimized', 'villain', 'villainous', 'vindictive', 'violation', 'violence', 'violent', 'violently', 'viper', 'virulence', 'virus', 'visitation', 'vixen', 'volatility', 'volcano', 'vomiting', 'voodoo', 'vote', 'vulgar', 'vulgarity', 'vulnerability', 'vulture', 'waffle', 'wail', 'wait', 'wallow', 'wan', 'wane', 'wanting', 'war', 'warden', 'ware', 'warfare', 'warlike', 'warn', 'warp', 'warped', 'wart', 'waste', 'wasted', 'wasteful', 'wasting', 'watery', 'waver', 'weakened', 'weakly', 'weakness', 'wear', 'wearily', 'weariness', 'weary', 'weeds', 'weep', 'weight', 'weird', 'weirdo', 'wen', 'wench', 'whack', 'whim', 'whine', 'whip', 'whirlwind', 'whisky', 'whore', 'wicked', 'wickedness', 'wild', 'wildcat', 'wildfire', 'willful', 'wimp', 'wimpy', 'wince', 'witch', 'witchcraft', 'withdraw', 'wither', 'withered', 'woe', 'woeful', 'woefully', 'words', 'worm', 'worn', 'worried', 'worry', 'worrying', 'worse', 'worsening', 'worthless', 'wound', 'wrangling', 'wrath', 'wreak', 'wreck', 'wrecked', 'wrench', 'wrestling', 'wretch', 'wretched', 'wrong', 'wrongdoing', 'wrongful', 'wrongly', 'wrought', 'wry', 'xenophobia', 'yawn', 'yawning', 'yearning', 'yell', 'yellows', 'yelp', 'zip'];
-      const emotionalWords = ['alarming', 'apocalyptic', 'catastrophic', 'chaos', 'chaotic', 'conspiracy', 'corrupt', 'crisis', 'dangerous', 'deadly', 'dire', 'disastrous', 'doom', 'doomed', 'dreadful', 'emergency', 'explosive', 'extreme', 'extremist', 'fanatic', 'fanatical', 'frantic', 'frenzy', 'fury', 'genocide', 'horrific', 'hysterical', 'imminent', 'incitement', 'inevitable', 'inflammatory', 'insurgency', 'outrage', 'panic', 'paranoia', 'persecution', 'propaganda', 'provocation', 'radical', 'rage', 'rebellion', 'revolution', 'rhetoric', 'riot', 'shocking', 'terrifying', 'threatening', 'totalitarian', 'turbulent', 'tyranny', 'upheaval', 'uprising', 'urgent', 'volatile', 'warfare', 'abandon', 'abandoned', 'abandonment', 'abduction', 'abhor', 'abhorrent', 'abominable', 'abomination', 'abortion', 'abrupt', 'absence', 'abuse', 'abyss', 'accident', 'accidental', 'accidentally', 'accolade', 'accursed', 'accused', 'accuser', 'accusing', 'acrobat', 'adder', 'adjudicate', 'admonition', 'adrift', 'advance', 'adverse', 'adversity', 'afflict', 'affliction', 'affront', 'afraid', 'aftermath', 'aga', 'aggression', 'aggressive', 'aggressor', 'aghast', 'agonizing', 'agony', 'ailing', 'alarm', 'alarming', 'alcoholism', 'alertness', 'alerts', 'alien', 'alienation', 'allure', 'amaze', 'amazingly', 'ambulance', 'ambush', 'anaconda', 'anarchism', 'anarchist', 'anarchy', 'anathema', 'angel', 'angina', 'anguish', 'animosity', 'annihilate', 'annihilated', 'annihilation', 'anomaly', 'anthrax', 'antichrist', 'antisocial', 'anxiety', 'anxious', 'apache', 'appalling', 'apparition', 'appendicitis', 'applause', 'apprehend', 'apprehension', 'apprehensive', 'armament', 'armaments', 'armed', 'armor', 'armored', 'arraignment', 'arsenic', 'arson', 'art', 'artillery', 'asp', 'aspiration', 'assail', 'assailant', 'assassin', 'assassinate', 'assassination', 'assault', 'assessment', 'astonishingly', 'astonishment', 'astray', 'asylum', 'atherosclerosis', 'atrocity', 'atrophy', 'attack', 'attacking', 'attorney', 'auditor', 'austere', 'autopsy', 'avalanche', 'averse', 'aversion', 'avoid', 'avoidance', 'avoiding', 'award', 'awful', 'bacteria', 'bacterium', 'bad', 'badness', 'bailiff', 'bait', 'bale', 'bane', 'bang', 'banger', 'banish', 'banished', 'bankrupt', 'bankruptcy', 'banshee', 'barbarian', 'barbaric', 'barricade', 'batter', 'battered', 'battled', 'battlefield', 'bayonet', 'bear', 'bearish', 'beast', 'beastly', 'beating', 'bee', 'behemoth', 'belittle', 'belligerent', 'belt', 'bestial', 'betray', 'beware', 'bewildered', 'bewilderment', 'bier', 'bigot', 'bigoted', 'biopsy', 'birch', 'birth', 'birthday', 'bitch', 'bizarre', 'blackmail', 'blackness', 'blast', 'bleeding', 'blemish', 'blessings', 'blight', 'blindfold', 'blitz', 'blob', 'blockade', 'bloodshed', 'bloodthirsty', 'bloody', 'blues', 'bomb', 'bombard', 'bombardment', 'bomber', 'bondage', 'bonus', 'bottomless', 'brawl', 'break', 'brigade', 'brighten', 'brimstone', 'broke', 'broken', 'brutal', 'brutality', 'brute', 'buck', 'bug', 'bugaboo', 'bully', 'bunker', 'burdensome', 'burglar', 'burial', 'buried', 'burke', 'burlesque', 'busted', 'butcher', 'buzz', 'cabal', 'cable', 'cadaver', 'camouflage', 'camouflaged', 'campaigning', 'cancer', 'candid', 'cane', 'cannibal', 'cannon', 'captivate', 'captive', 'captor', 'carcass', 'carcinoma', 'cardiomyopathy', 'carnage', 'carnivorous', 'cartridge', 'case', 'cash', 'casket', 'casualty', 'cataract', 'catastrophe', 'catch', 'caution', 'cautionary', 'cautious', 'cautiously', 'celebration', 'celebrity', 'cemetery', 'censor', 'ceremony', 'chaff', 'challenge', 'chance', 'change', 'changeable', 'chant', 'chaos', 'chargeable', 'chasm', 'cheer', 'cheerful', 'cherish', 'chicane', 'chicken', 'chimera', 'cholera', 'chuckle', 'clamor', 'clashing', 'claw', 'cleave', 'cliff', 'climax', 'cloudiness', 'clown', 'cobra', 'coerce', 'coercion', 'coffin', 'coincidence', 'coldness', 'collapse', 'collusion', 'coma', 'comatose', 'combat', 'combatant', 'combative', 'communism', 'compassion', 'compensate', 'complement', 'compliment', 'concealed', 'concealment', 'concerned', 'condemnation', 'confession', 'confessional', 'confidence', 'confine', 'confined', 'confinement', 'conflagration', 'conflict', 'confusion', 'conjure', 'conquest', 'conspiracy', 'conspirator', 'conspire', 'consternation', 'constrain', 'constraint', 'contagion', 'contagious', 'contaminated', 'contempt', 'contentious', 'contraband', 'convict', 'cop', 'corrosive', 'corrupting', 'counsellor', 'coup', 'courageous', 'court', 'cove', 'coward', 'cowardice', 'cowardly', 'coy', 'coyote', 'cracked', 'crash', 'crazed', 'crazy', 'cream', 'creature', 'crescendo', 'criminal', 'criminality', 'cringe', 'cripple', 'criticize', 'crocodile', 'cross', 'crouch', 'crouching', 'crowning', 'crucifixion', 'cruel', 'cruelly', 'cruelty', 'crusade', 'crushed', 'crushing', 'crypt', 'cult', 'cupping', 'cur', 'curiosity', 'curse', 'cursed', 'cutter', 'cutthroat', 'cutting', 'cyanide', 'cyclone', 'cyst', 'daemon', 'dagger', 'damnation', 'danger', 'dangerous', 'darken', 'darkened', 'darkness', 'dart', 'dashed', 'dastardly', 'dawn', 'deadly', 'deal', 'death', 'debacle', 'debauchery', 'decay', 'deceit', 'decomposition', 'decoy', 'defamation', 'default', 'defection', 'defend', 'defendant', 'defense', 'defenseless', 'defiance', 'deflation', 'deformity', 'defy', 'degrading', 'delay', 'deleterious', 'delighted', 'deluge', 'delusion', 'delusional', 'demented', 'dementia', 'demise', 'demon', 'demonic', 'demoralized', 'dentistry', 'denunciation', 'dependence', 'deplorable', 'deport', 'deportation', 'depraved', 'depreciated', 'depreciation', 'depress', 'depressed', 'deprivation', 'deranged', 'derogation', 'derogatory', 'descent', 'desecration', 'desert', 'deserted', 'desolation', 'despair', 'despairing', 'despotic', 'despotism', 'destination', 'destitute', 'destroyed', 'destroyer', 'destroying', 'destructive', 'detainee', 'deteriorate', 'deterioration', 'detonate', 'devastate', 'devastating', 'devastation', 'devil', 'devilish', 'diabolical', 'diagnosis', 'dictator', 'dictatorship', 'die', 'differently', 'difficult', 'difficulty', 'dike', 'dinosaur', 'dire', 'disable', 'disabled', 'disallowed', 'disappear', 'disapprove', 'disaster', 'disastrous', 'discipline', 'discontent', 'discontinuity', 'discourage', 'discrimination', 'disease', 'diseased', 'disembodied', 'disfigured', 'disgust', 'disgusting', 'dishonor', 'disinformation', 'disintegrate', 'dislocated', 'dismal', 'dismay', 'dismemberment', 'dismissal', 'disorder', 'displaced', 'displeased', 'dispossessed', 'disreputable', 'disrespectful', 'disruption', 'dissident', 'dissolution', 'distress', 'distressed', 'distressing', 'distrust', 'disturbance', 'divergent', 'diversion', 'divorce', 'dolphin', 'dominant', 'dominate', 'domination', 'dominion', 'doom', 'doomed', 'doomsday', 'doubt', 'downfall', 'dragon', 'dread', 'dreadful', 'dreadfully', 'drown', 'dubious', 'duel', 'dungeon', 'duress', 'dwarfed', 'dying', 'dynamic', 'eager', 'earthquake', 'ecstatic', 'edict', 'eel', 'ejaculation', 'electric', 'elevation', 'elf', 'elimination', 'elusive', 'emaciated', 'embarrassment', 'embolism', 'embrace', 'emergency', 'enchant', 'encroachment', 'encumbrance', 'endanger', 'endangered', 'endemic', 'endless', 'endocarditis', 'enemy', 'enforce', 'enigmatic', 'enliven', 'enmity', 'enslaved', 'entangled', 'entertainment', 'enthusiasm', 'enthusiast', 'epidemic', 'eradication', 'erase', 'erotic', 'erratic', 'erupt', 'eruption', 'escape', 'escaped', 'ethereal', 'euthanasia', 'evacuate', 'evade', 'evanescence', 'evasion', 'eventuality', 'eviction', 'evil', 'exacerbation', 'examination', 'excavation', 'excel', 'excitation', 'excite', 'excited', 'excitement', 'exciting', 'exclaim', 'exclusion', 'excruciating', 'execution', 'executioner', 'exhilaration', 'exigent', 'exile', 'exorcism', 'expect', 'expel', 'experiment', 'explode', 'explosion', 'explosive', 'expose', 'expulsion', 'exterminate', 'extermination', 'extrajudicial', 'failing', 'failure', 'fainting', 'falter', 'fanaticism', 'fanfare', 'fang', 'fangs', 'fatal', 'fatality', 'favorable', 'fear', 'fearful', 'fearfully', 'fearing', 'fearless', 'feat', 'feeling', 'felon', 'ferocious', 'festival', 'fete', 'fever', 'fiend', 'fierce', 'fiesta', 'fight', 'finally', 'fire', 'firearms', 'fled', 'flee', 'flinch', 'flirt', 'flog', 'flood', 'flounder', 'flu', 'fluctuation', 'fluke', 'flying', 'foe', 'forbidding', 'force', 'forced', 'forcibly', 'foreboding', 'foreclose', 'foreigner', 'foresee', 'forewarned', 'forfeiture', 'forgotten', 'formidable', 'fortress', 'fortune', 'foul', 'fragile', 'frantic', 'fraught', 'freakish', 'frenetic', 'frenzied', 'fret', 'frigate', 'fright', 'frighten', 'frightened', 'frightful', 'frisky', 'fugitive', 'fury', 'gallows', 'gambler', 'gambling', 'gang', 'gape', 'garish', 'gash', 'gasp', 'gasping', 'gawk', 'generosity', 'gent', 'ghastly', 'ghetto', 'ghost', 'ghostly', 'giant', 'gift', 'gladiator', 'glare', 'glimmer', 'glorify', 'gnome', 'goblin', 'god', 'godsend', 'gonorrhea', 'good', 'goodness', 'gore', 'gory', 'government', 'graduation', 'gratify', 'grave', 'greatness', 'greeting', 'grenade', 'grieve', 'grievous', 'grim', 'grin', 'grisly', 'grizzly', 'grope', 'grounded', 'growl', 'growling', 'guard', 'guerilla', 'guess', 'guillotine', 'gulp', 'gun', 'gunpowder', 'hag', 'hallucination', 'halter', 'halting', 'hanging', 'hangman', 'hap', 'harbinger', 'hardened', 'harm', 'harmful', 'harrowing', 'harshness', 'hate', 'hateful', 'hatred', 'haunt', 'haunted', 'havoc', 'hawk', 'hazard', 'hazardous', 'haze', 'hearing', 'hearse', 'heathen', 'heft', 'heighten', 'hell', 'hellish', 'helmet', 'helpless', 'helplessness', 'hemorrhage', 'hermaphrodite', 'hero', 'heroic', 'heroism', 'hesitation', 'hide', 'hideous', 'hiding', 'highest', 'hilarious', 'hiss', 'hoax', 'holiness', 'holocaust', 'homeless', 'homework', 'homicidal', 'homicide', 'honest', 'honeymoon', 'hood', 'hooded', 'hope', 'hopeful', 'hopeless', 'hopelessness', 'horde', 'horrible', 'horrid', 'horrific', 'horrified', 'horrifying', 'horror', 'horrors', 'hospital', 'hostage', 'hostile', 'hostilities', 'howl', 'humanitarian', 'hunter', 'hunting', 'hurricane', 'hurt', 'hurtful', 'hurting', 'hydra', 'hydrocephalus', 'hypertrophy', 'hypothesis', 'hysteria', 'hysterical', 'idolatry', 'ill', 'illegal', 'illegality', 'illegitimate', 'illicit', 'illness', 'illuminate', 'illumination', 'illusion', 'immediacy', 'immerse', 'immigrant', 'imminent', 'immoral', 'impeach', 'impending', 'impermeable', 'impotence', 'imprisoned', 'imprisonment', 'improvisation', 'improvise', 'incarceration', 'incase', 'incendiary', 'incest', 'incident', 'incite', 'incontinence', 'incrimination', 'incubus', 'incurable', 'incursion', 'indefensible', 'independence', 'indict', 'indictment', 'indifference', 'indoctrination', 'indomitable', 'ineptitude', 'inequality', 'inexplicable', 'infamous', 'infant', 'infanticide', 'infarct', 'infection', 'infectious', 'inferno', 'infestation', 'infidel', 'infidelity', 'infirmity', 'inflation', 'inflict', 'infliction', 'infrequent', 'inheritance', 'inhuman', 'injection', 'injure', 'injured', 'injurious', 'injury', 'inmate', 'insane', 'insanity', 'insecure', 'insecurity', 'insidious', 'insolvency', 'insolvent', 'inspired', 'instability', 'instinctive', 'insult', 'insulting', 'insurmountable', 'intelligence', 'intense', 'intercede', 'interrogate', 'interrogation', 'interrupt', 'interviewer', 'intimately', 'intimidate', 'intimidation', 'intolerance', 'intolerant', 'intrigue', 'intruder', 'intrusion', 'intrusive', 'invade', 'invader', 'invite', 'inviting', 'iris', 'irrational', 'irreconcilable', 'irreparable', 'isolated', 'jackpot', 'jail', 'jarring', 'jaundice', 'jaws', 'jealousy', 'jeopardize', 'jeopardy', 'jerk', 'jest', 'joker', 'jolt', 'journey', 'jubilant', 'jubilee', 'judgment', 'jungle', 'kerosene', 'khan', 'kidnap', 'kill', 'killing', 'kiss', 'knell', 'labor', 'lace', 'lament', 'landslide', 'languishing', 'larger', 'lash', 'latent', 'laugh', 'laughter', 'lava', 'lawlessness', 'lawsuit', 'lawyer', 'laxative', 'leave', 'leeches', 'leery', 'legalized', 'leisure', 'leprosy', 'lethal', 'leukemia', 'libel', 'liberate', 'liberation', 'liberty', 'lifeless', 'lightning', 'lines', 'lion', 'litigate', 'lockup', 'locust', 'loneliness', 'lonely', 'loom', 'lose', 'loss', 'lovely', 'loyal', 'luck', 'lucky', 'lunacy', 'lunatic', 'lunge', 'lynch', 'mace', 'mad', 'madden', 'madman', 'madness', 'mafia', 'mage', 'magical', 'magician', 'magnificent', 'majestic', 'malaria', 'malevolent', 'malice', 'malicious', 'malignancy', 'malignant', 'mandamus', 'mange', 'mangle', 'maniac', 'manifestation', 'manipulation', 'manslaughter', 'marry', 'martyr', 'martyrdom', 'marvel', 'masochism', 'massacre', 'measles', 'medal', 'medical', 'melee', 'memorable', 'menace', 'menacing', 'mercenary', 'merciless', 'merriment', 'mighty', 'military', 'militia', 'mimicry', 'miracle', 'miraculous', 'misbehavior', 'miscarriage', 'misconception', 'misery', 'misfortune', 'mishap', 'mislead', 'missile', 'missing', 'mistaken', 'mistrust', 'moan', 'mob', 'modify', 'molestation', 'money', 'monster', 'monstrosity', 'morals', 'morbidity', 'morgue', 'mortality', 'mortgage', 'mortgagor', 'mortification', 'mortuary', 'mournful', 'mouth', 'mug', 'mum', 'murder', 'murderer', 'murderous', 'musical', 'musket', 'mutilation', 'mutiny', 'muzzle', 'mysterious', 'mystery', 'mystic', 'nab', 'nasty', 'nefarious', 'nervous', 'nervousness', 'nether', 'neuralgia', 'neurosis', 'neurotic', 'newcomer', 'nightmare', 'noncompliance', 'notoriety', 'noxious', 'nullify', 'nurture', 'obey', 'obi', 'obit', 'obliging', 'obligor', 'obliterate', 'obliterated', 'obliteration', 'oblivion', 'obstacle', 'obstruct', 'occasional', 'occult', 'oddity', 'odious', 'offender', 'offense', 'ogre', 'omen', 'ominous', 'omnipotence', 'opera', 'operation', 'opium', 'opponent', 'opposed', 'oppress', 'oppression', 'oppressive', 'oppressor', 'optimism', 'orc', 'ordeal', 'ordnance', 'organization', 'originality', 'orphan', 'outburst', 'outcast', 'outcry', 'outpost', 'outrageous', 'outsider', 'overdue', 'overestimate', 'overpowering', 'overt', 'overthrow', 'owing', 'pain', 'pained', 'painful', 'palpable', 'palsy', 'pandemic', 'pang', 'panic', 'parachute', 'parade', 'paralysis', 'paranoia', 'parasite', 'pare', 'peaceful', 'penal', 'penalty', 'penance', 'penetration', 'perchance', 'perdition', 'perfection', 'peri', 'peril', 'perilous', 'perish', 'perishing', 'perjury', 'pernicious', 'perpetrator', 'persecute', 'persecution', 'perturbation', 'perverse', 'pessimism', 'pessimist', 'pest', 'pestilence', 'phalanx', 'phantom', 'picket', 'picnic', 'pillage', 'pinion', 'pitfall', 'placard', 'plague', 'playful', 'playground', 'plea', 'pleasant', 'plight', 'plummet', 'plunder', 'plunge', 'pneumonia', 'poaching', 'poison', 'poisoned', 'poisonous', 'polarity', 'police', 'policeman', 'polio', 'pop', 'posse', 'possessed', 'possession', 'postponement', 'poverty', 'powerful', 'powerfully', 'powerless', 'practiced', 'praiseworthy', 'prank', 'pray', 'precarious', 'precious', 'precipice', 'predicament', 'prejudiced', 'premature', 'premeditated', 'present', 'preservative', 'presto', 'prevent', 'prey', 'prick', 'princely', 'prison', 'prisoner', 'probation', 'problem', 'procedure', 'procession', 'proficiency', 'prognosis', 'prohibited', 'projectile', 'projectiles', 'prosecute', 'prowl', 'psychosis', 'puma', 'punch', 'punish', 'punished', 'punishing', 'punishment', 'punitive', 'purgatory', 'purge', 'purity', 'quail', 'quake', 'quandary', 'quarantine', 'quash', 'quickness', 'quicksilver', 'quiver', 'quivering', 'quote', 'rabble', 'rabid', 'radiation', 'radioactive', 'radon', 'raffle', 'raging', 'raid', 'rampage', 'randomly', 'ransom', 'rape', 'rapid', 'rapt', 'raptors', 'rarity', 'rascal', 'rat', 'rating', 'rattlesnake', 'rave', 'ravenous', 'ravine', 'raving', 'razor', 'react', 'reappear', 'rebel', 'rebellion', 'receiving', 'recesses', 'recession', 'reckless', 'recklessness', 'reflex', 'refutation', 'regiment', 'regulatory', 'reject', 'rejection', 'rejects', 'rejoice', 'rejoicing', 'rekindle', 'relapse', 'reluctant', 'remains', 'remarkable', 'remove', 'repellant', 'repellent', 'repent', 'repression', 'reprisal', 'repulsion', 'rescue', 'resection', 'resign', 'resignation', 'resistant', 'resisting', 'restrain', 'restrained', 'restriction', 'retaliation', 'retard', 'reticent', 'retirement', 'retrenchment', 'retribution', 'revenge', 'reversal', 'revoke', 'revolt', 'revolting', 'revolution', 'revolver', 'revulsion', 'reward', 'rheumatism', 'rhythmical', 'riddle', 'rifle', 'rigor', 'riot', 'riotous', 'risk', 'risky', 'rob', 'robber', 'robbery', 'rod', 'romance', 'rot', 'rubble', 'ruin', 'ruined', 'ruinous', 'rule', 'rupture', 'ruthless', 'saber', 'sabotage', 'sacrifices', 'sag', 'saint', 'saintly', 'sally', 'samurai', 'sanctify', 'sarcoma', 'savage', 'savagery', 'scaffold', 'scalpel', 'scandal', 'scapegoat', 'scar', 'scarce', 'scarcity', 'scare', 'scarecrow', 'schizophrenia', 'scold', 'score', 'scorpion', 'scoundrel', 'scourge', 'scrapie', 'scream', 'screaming', 'screech', 'scrimmage', 'seclusion', 'secrecy', 'sectarian', 'seize', 'seizure', 'senile', 'senseless', 'sensual', 'sentence', 'sepsis', 'seriousness', 'serpent', 'servile', 'settlor', 'shackle', 'shady', 'shaking', 'shaky', 'shame', 'shanghai', 'shank', 'shatter', 'shell', 'shipwreck', 'shiver', 'shock', 'shockingly', 'shoot', 'shooter', 'shooting', 'shopping', 'shortage', 'shot', 'shout', 'shrapnel', 'shriek', 'shrill', 'shrink', 'shudder', 'sickening', 'sickness', 'simplify', 'sin', 'sinful', 'singularly', 'sinister', 'sinner', 'siren', 'sisterhood', 'skid', 'slam', 'slap', 'slaughter', 'slaughterhouse', 'slaughtering', 'slave', 'slavery', 'slayer', 'slip', 'slush', 'sly', 'smash', 'smile', 'smite', 'smuggle', 'smuggler', 'smut', 'snag', 'snake', 'snare', 'sneak', 'sneaking', 'sneeze', 'socialism', 'socialist', 'somatic', 'sorcery', 'sordid', 'sorrow', 'sortie', 'soulless', 'soulmate', 'spa', 'spank', 'sparkle', 'spasm', 'spear', 'spectacular', 'specter', 'speculation', 'spider', 'spike', 'spinster', 'spirits', 'splash', 'splendid', 'splendor', 'spook', 'sprite', 'spur', 'squall', 'squeamish', 'stab', 'stagger', 'stalk', 'standoff', 'startle', 'startling', 'starvation', 'steady', 'steal', 'stealing', 'stealth', 'stealthily', 'stealthy', 'stifled', 'stigma', 'stillness', 'sting', 'stingy', 'stint', 'stormy', 'straits', 'stranger', 'strangle', 'stretcher', 'stripped', 'stroke', 'struggle', 'stunned', 'subito', 'subjugation', 'subordinate', 'subversion', 'subversive', 'subvert', 'succeed', 'sudden', 'suddenly', 'sufferer', 'suffering', 'suffocating', 'suffocation', 'suicidal', 'suicide', 'sultan', 'sun', 'sunk', 'sunny', 'superstition', 'superstitious', 'suppress', 'suppression', 'supremacy', 'surge', 'surgery', 'surprise', 'surprised', 'surprising', 'surprisingly', 'surrender', 'surveillance', 'suspect', 'suspense', 'suspension', 'suspicion', 'swamp', 'swampy', 'swastika', 'sweat', 'sweet', 'swelling', 'swerve', 'swim', 'sympathetic', 'synchronize', 'syncope', 'synonymous', 'syringe', 'taboo', 'tackle', 'tactics', 'talons', 'tantalizing', 'taunt', 'teach', 'tearful', 'teasing', 'tempest', 'terminal', 'terrible', 'terror', 'terrorism', 'terrorist', 'terrorize', 'theft', 'theocratic', 'thief', 'thirst', 'thirteenth', 'thorny', 'thrash', 'threat', 'threaten', 'threatening', 'thresh', 'thrill', 'thrilling', 'throb', 'thug', 'thumping', 'thundering', 'thwart', 'tickle', 'timid', 'timidity', 'toothache', 'topple', 'torment', 'tornado', 'torrent', 'torture', 'toughness', 'towering', 'toxin', 'tract', 'tragedy', 'traitor', 'tramp', 'transcendence', 'traumatic', 'travesty', 'treacherous', 'treachery', 'treason', 'treat', 'tree', 'trembling', 'tremor', 'trepidation', 'tribulation', 'tribunal', 'trick', 'trickery', 'trip', 'troll', 'trophy', 'troublesome', 'trump', 'tumor', 'tumour', 'tumult', 'tumultuous', 'turbulence', 'turbulent', 'turmoil', 'typhoon', 'tyrannical', 'tyranny', 'tyrant', 'ugliness', 'ulcer', 'ultimatum', 'unanticipated', 'unbeaten', 'unbridled', 'uncanny', 'uncertain', 'uncontrollable', 'uncover', 'undecided', 'underestimate', 'undesirable', 'undiscovered', 'uneasy', 'unemployed', 'unequal', 'unexpected', 'unexpectedly', 'unforeseen', 'unfriendly', 'unfulfilled', 'unguarded', 'unhealthy', 'unholy', 'unimaginable', 'unintended', 'unintentional', 'unintentionally', 'unique', 'unjustifiable', 'unkind', 'unknown', 'unlawful', 'unlucky', 'unnatural', 'unprecedented', 'unpredictable', 'unrest', 'unruly', 'unsafe', 'unsettled', 'unspeakable', 'unstable', 'unsteady', 'unsurpassed', 'unsuspecting', 'unthinkable', 'upheaval', 'uphill', 'uprising', 'urgency', 'urgent', 'usurped', 'validity', 'vampire', 'vanish', 'vanished', 'variable', 'varicella', 'veer', 'vehement', 'vendetta', 'vengeful', 'venom', 'venomous', 'veracity', 'verdict', 'verge', 'vermin', 'vertigo', 'victim', 'victimized', 'vigilant', 'villain', 'villainous', 'violation', 'violence', 'violent', 'violently', 'viper', 'virulence', 'visor', 'volatility', 'volcano', 'volunteer', 'vote', 'vulnerability', 'vulture', 'wail', 'wan', 'war', 'warden', 'ware', 'warfare', 'warlike', 'warlock', 'warn', 'warned', 'warning', 'warrior', 'wary', 'wasting', 'watch', 'waver', 'weakly', 'weight', 'weighty', 'weirdo', 'whim', 'whimper', 'whirlpool', 'whirlwind', 'wicked', 'wild', 'wilderness', 'wildfire', 'wimp', 'wimpy', 'wince', 'winner', 'winning', 'wireless', 'witch', 'witchcraft', 'withstand', 'wizard', 'woe', 'wonderful', 'wonderfully', 'worm', 'worry', 'worrying', 'worse', 'worship', 'wound', 'wrangling', 'wrath', 'wreck', 'wrecked', 'wrongly', 'xenophobia', 'yell', 'yelp', 'youth', 'zany', 'zeal'];
-
-      // get scores
-      const usVSthemScore = detectWords(cleanWords, usVSthemWords)
-      const threatScore = detectWords(cleanWords, threatWords)
-      const absolutistScore = detectWords(cleanWords, absolutistWords)
-      const angryScore = detectWords(cleanWords, angryWords)
-      const negativityScore = detectWords(cleanWords, negativeWords)
-      const emotionalScore = detectWords(cleanWords, emotionalWords)
-
-      // threat percentage
-      const threatPercent = Math.min((threatScore / threatWords.length) * 100 * 20, 100)
-      const usVsThemPercent = Math.min((usVSthemScore / usVSthemWords.length) * 100 * 20, 100)
-      const absolutistPercent = Math.min((absolutistScore / absolutistWords.length) * 100 * 20, 100)
-      const angryPercent = Math.min((angryScore / angryWords.length) * 100 * 8, 100)
-      const negativityPercent = Math.min((negativityScore / negativeWords.length) * 100 * 20, 100)
-      const emotionalPercent = Math.min((emotionalScore / emotionalWords.length) * 100 * 20, 100)
-      const totalPercent = Math.min((threatPercent + usVsThemPercent + absolutistPercent + angryPercent + negativityPercent + emotionalPercent) / 6, 100)
-
-      results.push({
-        year: year,
-        total: totalPercent,
-        usVSthem: usVsThemPercent,
-        absolutist: absolutistPercent,
-        angry: angryPercent,
-        negativity: negativityPercent,
-        emotional: emotionalPercent,
-        threat: threatPercent,
-      })
-
-      // display results
-      entry.querySelector(".entryResults").innerHTML = `
-        <p><strong>Overall Threat Level: ${totalPercent.toFixed(1)}%</strong>
-          <div style = "width:100%; background:#f0ebe8; border:1px solid #d9d0cc; border-radius:10px;">
-            <div style = "background:#6b6057; width:${totalPercent}%; height:12px; border-radius:10px;"></div>
-          </div></p>
-        <div style="margin-top:20px;"></div>  
-        <div style = "margin-bottom:12px;">
-          <span style = "margin-bottom: 4px; display: block;">Threat</span>
-          <div style = "width:100%; background:#f0ebe8; border:1px solid #d9d0cc; border-radius:10px;">
-            <div style = "background:maroon; width:${threatPercent}%; height:7px; border-radius:10px;"></div>
-            </div></div>
-        <div style = "margin-bottom:12px;">
-          <span style = "margin-bottom: 4px; display: block;">Us vs Them</span> 
-          <div style = "width:100%; background:#f0ebe8; border:1px solid #d9d0cc; border-radius:10px;">
-            <div style = "background:firebrick; width:${usVsThemPercent}%; height:7px; border-radius:10px;"></div>
-          </div></div>
-        <div style = "margin-bottom:12px;">
-          <span style = "margin-bottom: 4px; display: block;">Absolutist</span>
-          <div style = "width:100%; background:#f0ebe8; border:1px solid #d9d0cc; border-radius:10px;">
-            <div style = "background:indianred; width:${absolutistPercent}%; height:7px; border-radius:10px;"></div>
-          </div></div>
-        <div style = "margin-bottom:12px;">
-          <span style = "margin-bottom: 4px; display: block;">Anger</span>
-          <div style = "width:100%; background:#f0ebe8; border:1px solid #d9d0cc; border-radius:10px;">
-            <div style = "background:palevioletred; width:${angryPercent}%; height:7px; border-radius:10px;"></div>
-          </div></div>
-        <div style = "margin-bottom:12px;">
-          <span style = "margin-bottom: 4px; display: block;">Negativity</span>
-          <div style = "width:100%; background:#f0ebe8; border:1px solid #d9d0cc; border-radius:10px;">
-            <div style = "background:#7B5EA7; width:${negativityPercent}%; height:7px; border-radius:10px;"></div>
-          </div></div>
-        <div style = "margin-bottom:12px;">
-          <span style = "margin-bottom: 4px; display: block;">Emotional Charge</span>
-          <div style = "width:100%; background:#f0ebe8; border:1px solid #d9d0cc; border-radius:10px;">
-            <div style = "background:#2B3A67; width:${emotionalPercent}%; height:7px; border-radius:10px;"></div>
-          </div></p> `
-
-      updateChart()
-    })
-}
-
-    function updateChart() {
-      const sorted = results.sort((a, b) => a.year - b. year)
-      const labels = sorted.map(r => r.year)
-      const totalData = sorted.map(r => r.total)
-      const threatData = sorted.map(r => r.threat)
-      const usVSthemData = sorted.map(r => r.usVSthem)
-      const absolutistData = sorted.map(r => r.absolutist)
-      const angryData = sorted.map(r => r.angry)
-      const negativityData = sorted.map(r => r.negativity)
-      const emotionalData = sorted.map(r => r.emotional)
-
-      if (window.myChart instanceof Chart) {
-        window.myChart.destroy()
-      }
-
-      const ctx = document.getElementById('myChart').getContext('2d')
-      window.myChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [
-            { label: 'Overall', data: totalData, borderColor: "#6b6057", fill: false },
-            { label: 'Threat', data: threatData, borderColor: "maroon", fill: false },
-            { label: 'Us vs Them', data: usVSthemData, borderColor: "firebrick", fill: false },
-            { label: 'Absolutist', data: absolutistData, borderColor: "indianred", fill: false },
-            { label: 'Anger', data: angryData, borderColor: "palevioletred", fill: false },
-            { label: 'Negativity', data: negativityData, borderColor: "#7B5EA7", fill: false },
-            { label: 'Emotional Charge', data: emotionalData, borderColor: "#2B3A67", fill: false }
-         ]
-       }, 
-       options: {
-          scales: {
-            y: { min: 0, max:100 }
-          }
-       }
-   })
-  }
-    function toggleChart() {
-      const chart = document.getElementById('myChart')
-      const button = event.target
-      if (chart.style.display == "none") {
-        chart.style.display = "block"
-        button.textContent = "Hide Chart"
-      } else {
-        chart.style.display = "none"
-        button.textContent = "Show Chart"
-      }
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      margin-bottom: 25px;
+      padding-bottom: 25px;
+      border-bottom: 1px dashed #e6deda;
+      position: relative;
     }
 
-function addTextBox() {
-    const container = document.getElementById("textBoxes")
-    const div = document.createElement("div")
-    div.className = "textEntry"
-    div.innerHTML = `
-        <input type="number" class="yearInput" placeholder="Year (e.g. 1939)" min="1900" style="padding: 10px; border: 1px solid #d9d0cc; border-radius: 10px; background-color: #fffcfb;">
-        <div class="textAndResults">
-            <textarea class="inputText" rows="5"></textarea>
-            <div class="entryResults"></div>
-        </div>
-    `
-    container.appendChild(div)
+    .yearInput {
+      font-size: 15px;
+      font-weight: 500;
+      width: 120px;
+      flex-shrink: 0;
+      padding: 10px;
+      border: 1px solid #d9d0cc;
+      border-radius: 10px;
+      background-color: #fffcfb;
+      color: #2c2523;
+      text-align: center;
+    }
+
+    .textAndResults {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .remove-btn {
+      position: absolute;
+      right: 0;
+      top: -10px;
+      background: none;
+      border: none;
+      color: #ba322a;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 5px;
+    }
+
+    .entryResults {
+      margin-top: 20px;
+      max-width: 500px;
+    }
+
+    .metric-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0 0 10px 0;
+      color: #2c2523;
+      letter-spacing: -0.2px;
+    }
+
+    .progress-wrapper {
+      margin-bottom: 14px;
+    }
+
+    .progress-label {
+      font-size: 15px;
+      font-weight: 500;
+      margin-bottom: 5px;
+      color: #2c2523;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 10px;
+      background-color: #efeae6;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 5px;
+      transition: width 0.4s ease-out;
+    }
+
+    .fill-overall   { background-color: #736762; }
+    .fill-threat    { background-color: #800000; }
+    .fill-usvsthem  { background-color: #ba322a; }
+    .fill-absolutist{ background-color: #d46e65; }
+    .fill-anger     { background-color: #e082a6; }
+    .fill-negativity{ background-color: #8c7cb8; }
+    .fill-emotional { background-color: #2b3d75; }
+
+    .button-row {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-primary {
+      background-color: #8c2f1e;
+      color: white;
+      border: none;
+    }
+
+    .btn-primary:hover {
+      background-color: #6e2416;
+    }
+
+    .btn-secondary {
+      background-color: #f0ebe8;
+      color: #4a3e3b;
+      border: 1px solid #d9d0cc;
+    }
+
+    .btn-secondary:hover {
+      background-color: #e6deda;
+    }
+
+    #results {
+      margin-top: 15px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #6b5a55;
+    }
+
+    #chartContainer {
+      margin-top: 40px;
+      background: #fffcfb;
+      padding: 15px;
+      border-radius: 10px;
+      border: 1px solid #d9d0cc;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Language Analyzer</h1>
+    <p class="subtitle">Paste your text here to analyze it for signs of escalating rhetoric.</p>
+
+    <div id="textBoxes">
+      <!-- Dynamic storage contents populate here -->
+    </div>
+
+    <div class="button-row">
+      <button class="btn-secondary" onclick="addTextBox()">+ Add Text Box</button>
+      <button class="btn-primary" onclick="analyze()">Analyze All</button>
+      <button id="toggleChartBtn" class="btn-secondary" onclick="toggleChart()">Hide Chart</button>
+    </div>
+
+    <div id="results"></div>
+
+    <div id="chartContainer">
+      <canvas id="myChart" width="600" height="300"></canvas>
+    </div>
+  </div>
+
+<script>
+const results = [];
+let myChartInstance = null;
+
+const LEET_MAP = {
+    '0': 'o', '1': 'i', 'l': 'i', '3': 'e', '4': 'a', 
+    '5': 's', '7': 't', '8': 'b', '@': 'a', '$': 's',
+    '!': 'i', 'x': 'x'
+};
+
+// Dictionaries
+const usVSthemWords = ['barbarian', 'collaborator', 'degenerate', 'demographic', 'enemy', 'foreigner', 'globalist', 'heretic', 'immigrant', 'impure', 'infidel', 'infiltrator', 'ingroup', 'invader', 'native', 'oppressor', 'outcast', 'outsider', 'parasite', 'puppet', 'radical', 'regime', 'replacement', 'separatist', 'subversive', 'traitor', 'tribal', 'tribe', 'undesirable', 'vermin', 'xenophobia', "outsiders", "foreigners", "elites", "globalists", "establishment", "regime", "enemies", "invaders", "infiltrators", "traitors", "patriots", "replace", "destroy", "purge", "cleanse", "reclaim", "takeover", "occupation", "oppressors", "liberators", "collaborators", "puppets", "sheeple", "brainwashed", "awakened", "redpilled", "sheep", "cattle", "vermin", "parasites", "infestation", "invasion", "demographic", "replacement", "native", "pure", "impure", "corrupt", "treasonous"];
+const threatWords = ['anarchist', 'anarchy', 'arson', 'barbarian', 'barbaric', 'belligerent', 'bigot', 'bigoted', 'bigotry', 'brigand', 'cabal', 'chaos', 'cowardice', 'cult', 'demagogue', 'desperado', 'extremist', 'faction', 'fanatic', 'fanaticism', 'fascism', 'fascist', 'fundamentalism', 'fundamentalist', 'gang', 'gangster', 'illegal', 'insurgent', 'intolerance', 'lawlessness', 'mafia', 'militant', 'militia', 'mob', 'mobster', 'mutiny', 'nazi', 'nazism', 'outlaw', 'persecutor', 'pillage', 'plunder', 'rabble', 'racketeer', 'reactionary', 'rebel', 'ringleader', 'sabotage', 'sedition', 'totalitarian', 'trafficker', 'treason', 'tyrant', 'tyranny', 'vandal', 'vendetta', 'villain', 'villainous', 'warlord', 'wrongdoer', 'ambush', 'annihilate', 'annihilated', 'armed', 'assassin', 'assassinate', 'assassination', 'attack', 'attacking', 'bomb', 'bombard', 'bombardment', 'bomber', 'combat', 'combatant', 'combative', 'destroyed', 'destroyer', 'destroying', 'explode', 'exterminate', 'fire', 'firearms', 'grenade', 'gun', 'gunpowder', 'hanging', 'hangman', 'hostage', 'invade', 'invader', 'kidnap', 'kill', 'killing', 'lynch', 'manslaughter', 'massacre', 'missile', 'murder', 'murderer', 'murderous', 'poison', 'poisoned', 'poisonous', 'purge', 'raid', 'rifle', 'shoot', 'shooter', 'shooting', 'slaughter', 'slaughterhouse', 'slaughtering', 'stab', 'strangle', 'terror', 'terrorism', 'terrorist', 'terrorize', 'threat', 'threaten', 'threatening', 'torture', 'war', 'warfare', 'warlike', 'warrior', 'wildfire'];
+const absolutistWords = ['always', 'never', 'every', 'all', 'none', 'nothing', 'everything', 'nobody', 'everyone', 'forever', 'eternal', 'inevitable', 'undeniable', 'indisputable', 'unquestionable', 'irrefutable', 'absolute', 'absolutely', 'totally', 'completely', 'utterly', 'purely', 'solely', 'only', 'must', 'cannot', 'impossible', 'certain', 'certainly', 'definite', 'definitely', 'guaranteed', 'unconditional', 'unconditionally', 'invariably', 'without exception', 'no question', 'beyond doubt', 'plain and simple', 'period', 'full stop', 'end of story', 'that is that', 'no debate', 'fact', 'proven', 'obvious', 'clearly', 'simply', 'just', 'real', 'true', 'false', 'wrong', 'right', 'pure', 'corrupt', 'ultimate', 'final', 'total', 'radical', 'extreme', 'existential', 'fundamental', 'core', 'essential', 'critical', 'decisive', 'supreme', 'dominant', 'inferior', 'superior', 'weak', 'strong', 'coward', 'hero', 'traitor', 'patriot', 'winner', 'loser', 'good', 'evil', 'light', 'darkness'];
+const angryWords = ['belligerent', 'bigot', 'bigoted', 'coward', 'cowardly', 'craven', 'deceitful', 'degenerate', 'despicable', 'devious', 'dishonest', 'fanatical', 'fraudster', 'fury', 'greed', 'greedy', 'hateful', 'heinous', 'hostile', 'hubris', 'hypocrite', 'hypocritical', 'idiotic', 'immoral', 'insolent', 'irate', 'irascible', 'jealous', 'livid', 'loathsome', 'malicious', 'malevolent', 'menacing', 'narcissist', 'narcishistic', 'overbearing', 'paranoid', 'pompous', 'presumptuous', 'pretentious', 'raging', 'resentful', 'ruthless', 'savage', 'scheming', 'scoundrel', 'selfish', 'sinister', 'spiteful', 'treacherous', 'vicious', 'vindictive', 'wrath', 'wrathful'];
+const negativeWords = ['abnormal', 'appalling', 'atrocious', 'awful', 'barbarism', 'brutal', 'brutality', 'corrupt', 'corruption', 'cowardice', 'criminal', 'cruel', 'cruelty', 'damaging', 'dangerous', 'deadly', 'decit', 'deceptive', 'deplorable', 'depraved', 'destructive', 'deviant', 'diabolic', 'diabolical', 'disgraceful', 'dishonest', 'disreputable', 'dreadful', 'evil', 'failure', 'fake', 'falsehood', 'fatal', 'filthy', 'fraud', 'fraudulent', 'ghastly', 'grim', 'harmful', 'hideous', 'horrendous', 'horrific', 'hostile', 'ignorant', 'immoral', 'incompetent', 'infamous', 'injustice', 'menacing', 'misleading', 'monstrous', 'nefarious', 'offensive', 'oppressive', 'outrageous', 'pathetic', 'poisonous', 'reckless', 'reprehensible', 'revolting', 'rotten', 'shameful', 'sinister', 'toxic', 'treacherous', 'ugly', 'unethical', 'unjust', 'untrustworthy', 'vicious', 'vile', 'violent', 'wicked', 'worthless', 'departed', 'departure'];
+const emotionalChargeWords = [...new Set([...angryWords, ...negativeWords, 'fury', 'hatred', 'rage', 'crisis', 'outrage'])];
+
+function normalizeText(text) {
+    let cleaned = text.toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "") 
+        .replace(/[.\-_*|/(),?!;:]/g, "");     
+    
+    let normalized = "";
+    for (let char of cleaned) {
+        normalized += LEET_MAP[char] || char;
+    }
+    return normalized;
 }
 
-  </script>
-  </body>
+function getLevenshteinDistance(s1, s2) {
+    if (s1.length < s2.length) return getLevenshteinDistance(s2, s1);
+    if (s2.length === 0) return s1.length;
+
+    let previousRow = Array.from({ length: s2.length + 1 }, (_, i) => i);
+    
+    for (let i = 0; i < s1.length; i++) {
+        let currentRow = [i + 1];
+        for (let j = 0; j < s2.length; j++) {
+            let insertions = previousRow[j + 1] + 1;
+            let deletions = currentRow[j] + 1;
+            let substitutions = previousRow[j] + (s1[i] !== s2[j] ? 1 : 0);
+            currentRow.push(Math.min(insertions, deletions, substitutions));
+        }
+        previousRow = currentRow;
+    }
+    return previousRow[previousRow.length - 1];
+}
+
+function detectWordsAdvanced(cleanWords, wordList, maxDistance = 1) {
+    let score = 0;
+    for (const word of cleanWords) {
+        for (const target of wordList) {
+            if (getLevenshteinDistance(word, target) <= maxDistance) {
+                score++;
+                break; 
+            }
+        }
+    }
+    return score;
+}
+
+// Local Storage Handlers
+function saveToStorage() {
+    const dataToSave = [];
+    const entries = document.querySelectorAll(".textEntry");
+    entries.forEach(entry => {
+        const textVal = entry.querySelector(".inputText").value;
+        const yearVal = entry.querySelector(".yearInput").value;
+        dataToSave.push({ text: textVal, year: yearVal });
+    });
+    localStorage.setItem("rhetoricAnalyzerData", JSON.stringify(dataToSave));
+}
+
+function loadFromStorage() {
+    const wrapper = document.getElementById("textBoxes");
+    wrapper.innerHTML = "";
+    const stored = localStorage.getItem("rhetoricAnalyzerData");
+    if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.length > 0) {
+            parsed.forEach(item => addTextBox(item.text, item.year));
+            return;
+        }
+    }
+    addTextBox("", ""); 
+}
+
+function addTextBox(initialText = "", initialYear = "") {
+    const wrapper = document.getElementById("textBoxes");
+    const newEntry = document.createElement("div");
+    newEntry.className = "textEntry";
+    newEntry.innerHTML = `
+        <button class="remove-btn" onclick="removeTextBox(this)">×</button>
+        <input type="number" class="yearInput" placeholder="Year" min="1900" value="${initialYear}" oninput="saveToStorage()">
+        <div class="textAndResults">
+          <textarea class="inputText" rows="5" placeholder="Paste historical text transcript fragment here..." oninput="saveToStorage()">${initialText}</textarea>
+          <div class="entryResults"></div>
+        </div>
+    `;
+    wrapper.appendChild(newEntry);
+    saveToStorage();
+}
+
+function removeTextBox(btn) {
+    btn.parentElement.remove();
+    saveToStorage();
+}
+
+function toggleChart() {
+    const chartDiv = document.getElementById("chartContainer");
+    const btn = document.getElementById("toggleChartBtn");
+    if (chartDiv.style.display === "none") {
+        chartDiv.style.display = "block";
+        btn.textContent = "Hide Chart";
+    } else {
+        chartDiv.style.display = "none";
+        btn.textContent = "Show Chart";
+    }
+}
+
+function updateChartVisuals(analysisResults) {
+    const ctx = document.getElementById('myChart').getContext('2d');
+    
+    analysisResults.sort((a, b) => Number(a.year) - Number(b.year));
+    const labels = analysisResults.map(r => `Year ${r.year}`);
+    
+    if (myChartInstance) {
+        myChartInstance.destroy();
+    }
+
+    myChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                { label: 'Overall Level', data: analysisResults.map(r => r.overall), borderColor: '#736762', backgroundColor: 'transparent', tension: 0.1, borderWidth: 3 },
+                { label: 'Threat', data: analysisResults.map(r => r.threat), borderColor: '#800000', backgroundColor: 'transparent', tension: 0.1, borderWidth: 3 },
+                { label: 'Us vs Them', data: analysisResults.map(r => r.usVsThem), borderColor: '#ba322a', backgroundColor: 'transparent', tension: 0.1, borderWidth: 3 },
+                { label: 'Absolutist', data: analysisResults.map(r => r.absolutist), borderColor: '#d46e65', backgroundColor: 'transparent', tension: 0.1, borderWidth: 3 },
+                { label: 'Anger', data: analysisResults.map(r => r.angry), borderColor: '#e082a6', backgroundColor: 'transparent', tension: 0.1, borderWidth: 3 },
+                { label: 'Negativity', data: analysisResults.map(r => r.negative), borderColor: '#8c7cb8', backgroundColor: 'transparent', tension: 0.1, borderWidth: 3 },
+                { label: 'Emotional Charge', data: analysisResults.map(r => r.emotionalCharge), borderColor: '#2b3d75', backgroundColor: 'transparent', tension: 0.1, borderWidth: 3 }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true, max: 100 } }
+        }
+    });
+}
+
+function analyze() {
+    results.length = 0;
+    const entries = document.querySelectorAll(".textEntry");
+
+    entries.forEach(entry => {
+        const textElement = entry.querySelector(".inputText");
+        const yearElement = entry.querySelector(".yearInput");
+        const resultsDisplay = entry.querySelector(".entryResults");
+
+        if (!textElement) return;
+
+        const text = textElement.value;
+        const year = yearElement ? yearElement.value || "0" : "0";
+
+        if (!text || text.trim() === "") return;
+
+        const normalizedText = normalizeText(text);
+        const cleanWords = normalizedText.split(/\s+/).filter(w => w.length > 0);
+        const totalW = Math.max(cleanWords.length, 1);
+
+        const usVsThemScore = detectWordsAdvanced(cleanWords, usVSthemWords, 1);
+        const threatScore = detectWordsAdvanced(cleanWords, threatWords, 1);
+        const absolutistScore = detectWordsAdvanced(cleanWords, absolutistWords, 0); 
+        const angryScore = detectWordsAdvanced(cleanWords, angryWords, 1);
+        const negativeScore = detectWordsAdvanced(cleanWords, negativeWords, 1);
+        const emotionalScore = detectWordsAdvanced(cleanWords, emotionalChargeWords, 1);
+
+        const pThreat = Math.min(((threatScore / totalW) * 100) * 4.5, 100).toFixed(1);
+        const pUsVsThem = Math.min(((usVsThemScore / totalW) * 100) * 4.0, 100).toFixed(1);
+        const pAbsolutist = Math.min(((absolutistScore / totalW) * 100) * 2.5, 100).toFixed(1);
+        const pAnger = Math.min(((angryScore / totalW) * 100) * 5.0, 100).toFixed(1);
+        const pNegativity = Math.min(((negativeScore / totalW) * 100) * 3.5, 100).toFixed(1);
+        const pEmotional = Math.min(((emotionalScore / totalW) * 100) * 3.0, 100).toFixed(1);
+        
+        const pOverall = ((parseFloat(pThreat) + parseFloat(pUsVsThem) + parseFloat(pAbsolutist) + parseFloat(pAnger) + parseFloat(pNegativity) + parseFloat(pEmotional)) / 6).toFixed(1);
+
+        if (resultsDisplay) {
+            resultsDisplay.innerHTML = `
+                <div class="metric-title">Overall Threat Level: ${pOverall}%</div>
+                <div class="progress-wrapper">
+                    <div class="progress-track"><div class="progress-fill fill-overall" style="width: ${pOverall}%"></div></div>
+                </div>
+                
+                <div class="progress-wrapper">
+                    <div class="progress-label">Threat</div>
+                    <div class="progress-track"><div class="progress-fill fill-threat" style="width: ${pThreat}%"></div></div>
+                </div>
+
+                <div class="progress-wrapper">
+                    <div class="progress-label">Us vs Them</div>
+                    <div class="progress-track"><div class="progress-fill fill-usvsthem" style="width: ${pUsVsThem}%"></div></div>
+                </div>
+
+                <div class="progress-wrapper">
+                    <div class="progress-label">Absolutist</div>
+                    <div class="progress-track"><div class="progress-fill fill-absolutist" style="width: ${pAbsolutist}%"></div></div>
+                </div>
+
+                <div class="progress-wrapper">
+                    <div class="progress-label">Anger</div>
+                    <div class="progress-track"><div class="progress-fill fill-anger" style="width: ${pAnger}%"></div></div>
+                </div>
+
+                <div class="progress-wrapper">
+                    <div class="progress-label">Negativity</div>
+                    <div class="progress-track"><div class="progress-fill fill-negativity" style="width: ${pNegativity}%"></div></div>
+                </div>
+
+                <div class="progress-wrapper">
+                    <div class="progress-label">Emotional Charge</div>
+                    <div class="progress-track"><div class="progress-fill fill-emotional" style="width: ${pEmotional}%"></div></div>
+                </div>
+            `;
+        }
+
+        results.push({
+            year: Number(year),
+            overall: parseFloat(pOverall),
+            threat: parseFloat(pThreat),
+            usVsThem: parseFloat(pUsVsThem),
+            absolutist: parseFloat(pAbsolutist),
+            angry: parseFloat(pAnger),
+            negative: parseFloat(pNegativity),
+            emotionalCharge: parseFloat(pEmotional)
+        });
+    });
+
+    document.getElementById("results").innerText = `Analyzed ${results.length} entries.`;
+
+    if (results.length > 0) {
+        updateChartVisuals(results);
+    }
+}
+
+window.onload = function() {
+    loadFromStorage();
+};
+</script>
+</body>
 </html>
