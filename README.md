@@ -1,6 +1,6 @@
 # language-analyzer
 
-Text-analysis tool to identify and visualize escalating rhetoric across numerous sources
+Text-analysis tool to identify and visualize escalating rhetoric across numerous sources.
 
 ## Overview
 * **Language** Javascript
